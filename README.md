@@ -1,10 +1,9 @@
 # Germa 66 — Sistema de información (MVP)
 
-Node.js + Express + MySQL + JWT/RBAC. Frontend en HTML/CSS/JS (sin build) servido por el mismo backend.
 
 ## Arranque rápido
 
-1. Crear la base y un usuario en MySQL:
+1. Crear la base y un usuario en MySQL en Wampserver:
    ```sql
    CREATE DATABASE germa66 CHARACTER SET utf8mb4;
    CREATE USER 'germa'@'localhost' IDENTIFIED BY 'germa123';
@@ -16,11 +15,10 @@ Node.js + Express + MySQL + JWT/RBAC. Frontend en HTML/CSS/JS (sin build) servid
    cp .env.example .env      # ajusta JWT_SECRET y credenciales de BD
    npm install
    npm run seed              # crea tablas, roles y el Administrador inicial
-   npm start                 # http://localhost:3000
+   npm start                 # http://localhost:4444
    ```
-3. Entrar con `admin@germa66.local` / `Admin123*` (cámbiala en `.env` antes del seed).
+3. Entrar con `germa66@admin.com` / `germa66.`.
 
-Pruebas: `npm test` (usa la base `germa66_test`, dale permisos al usuario sobre ella).
 
 ## Estructura
 
