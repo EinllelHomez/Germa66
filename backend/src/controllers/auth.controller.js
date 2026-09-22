@@ -1,42 +1,46 @@
+// Controlador: recibe la petición HTTP, pide datos al Modelo y decide qué responder.
+// No contiene SQL: eso vive en src/models.
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
-const { registrarLog } = require("../services/audit");
+const usuarioModel = require("../models/usuario.model");
+const auditoriaModel = require("../models/auditoria.model");
 
-module.exports = (pool) => ({
-  async login(req, res) {
-    const { email, password } = req.body || {};
-    if (!email || !password) return res.status(400).json({ error: "Ingresa correo y contraseña." });
+module.exports = (pool) => {
+  const Usuario = usuarioModel(pool);
+  const Auditoria = auditoriaModel(pool);
 
-    const correo = String(email).trim().toLowerCase();
-    const [rows] = await pool.query(
-      "SELECT u.id, u.nombre, u.email, u.clave_hash, u.activo, r.nombre AS rol FROM usuarios u JOIN roles r ON r.id = u.rol_id WHERE u.email = ?",
-      [correo]
-    );
-    const user = rows[0];
+  return {
+    async login(req, res) {
+      const { email, password } = req.body || {};
+      if (!email || !password) return res.status(400).json({ error: "Ingresa correo y contraseña." });
 
-    // Mismo mensaje si no existe o la clave falla (no revela qué correos existen)
-    if (!user || !(await bcrypt.compare(String(password), user.clave_hash))) {
-      await registrarLog(pool, user && user.id, "Login fallido: " + correo, req.ip);
-      return res.status(401).json({ error: "Correo o contraseña incorrectos." });
-    }
-    if (!user.activo) {
-      await registrarLog(pool, user.id, "Login bloqueado: cuenta desactivada", req.ip);
-      return res.status(403).json({ error: "Tu cuenta está desactivada. Contacta a un administrador." });
-    }
-    const payload = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
-    const token = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
-    await registrarLog(pool, user.id, "Login exitoso", req.ip);
-    res.json({ token, user: payload });
-  },
+      const correo = String(email).trim().toLowerCase();
+      const user = await Usuario.buscarPorEmailConClave(correo);
 
-  me(req, res) {
-    const { id, nombre, email, rol } = req.user;
-    res.json({ id, nombre, email, rol });
-  },
+      // Mismo mensaje si no existe o la clave falla (no revela qué correos existen)
+      if (!user || !(await bcrypt.compare(String(password), user.clave_hash))) {
+        await Auditoria.registrarLog(user && user.id, "Login fallido: " + correo, req.ip);
+        return res.status(401).json({ error: "Correo o contraseña incorrectos." });
+      }
+      if (!user.activo) {
+        await Auditoria.registrarLog(user.id, "Login bloqueado: cuenta desactivada", req.ip);
+        return res.status(403).json({ error: "Tu cuenta está desactivada. Contacta a un administrador." });
+      }
+      const payload = { id: user.id, nombre: user.nombre, email: user.email, rol: user.rol };
+      const token = jwt.sign(payload, env.jwtSecret, { expiresIn: env.jwtExpiresIn });
+      await Auditoria.registrarLog(user.id, "Login exitoso", req.ip);
+      res.json({ token, user: payload });
+    },
 
-  async logout(req, res) { // CerrarSesion(): el token se descarta en el cliente
-    await registrarLog(pool, req.user.id, "Cierre de sesión", req.ip);
-    res.json({ ok: true });
-  },
-});
+    me(req, res) {
+      const { id, nombre, email, rol } = req.user;
+      res.json({ id, nombre, email, rol });
+    },
+
+    async logout(req, res) {
+      await Auditoria.registrarLog(req.user.id, "Cierre de sesión", req.ip);
+      res.json({ ok: true });
+    },
+  };
+};

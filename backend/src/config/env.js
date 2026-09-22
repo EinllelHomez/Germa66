@@ -1,9 +1,9 @@
 require("dotenv").config();
 
 module.exports = {
-  port: Number(process.env.PORT) || 4444,
+  port: Number(process.env.PORT) || 3000,
   jwtSecret: process.env.JWT_SECRET || "dev-secret-no-usar-en-produccion",
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "12h",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "8h",
   db: {
     host: process.env.DB_HOST || "localhost",
     port: Number(process.env.DB_PORT) || 3306,
@@ -12,5 +12,5 @@ module.exports = {
     database: process.env.DB_NAME || "germa66",
   },
   adminEmail: process.env.ADMIN_EMAIL || "admin@germa66.local",
-  adminPassword: process.env.ADMIN_PASSWORD || "cambia-esta-clave",
+  adminPassword: process.env.ADMIN_PASSWORD || "Admin123*",
 };

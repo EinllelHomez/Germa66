@@ -1,0 +1,5 @@
+id,cliente,estado
+PED-001,Reino del Norte,entregado
+PED-002,Reino del Sur,pendiente
+PED-003,Reino del Norte,en_preparacion
+PED-004,Reino del Este,entregado
