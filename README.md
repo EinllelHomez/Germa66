@@ -63,7 +63,49 @@ Sigue el patrón de Usuarios, en este orden:
 
 Las tablas de inventario, cyborgs, reinos_clientes y pedidos ya existen en `schema.sql`.
 
-## Módulo C++
+## Módulo C++  -- Solo se decarga el instalador de C++, Si van a editar el C++, si no lo van a tocar, no es necesario, ya que es un .exe
 
-Ver `cpp/README.md`. Calcula los indicadores de Reportes (RF-06) leyendo CSV
-y devolviendo JSON; es independiente del backend hasta que se conecte en el Sprint 3.
+Abrir el descargador de c++, que estta en el repositorio.
+Despues de descargar seguir estos pasos.
+1. Crear un proyecto nuevo
+En Dev-C++, ve al menú de arriba: File → New → Project...
+2
+2. Elegir tipo de proyecto
+En la ventana que aparece, selecciona el ícono 'Console Application'. Abajo, donde dice 'C' y 'C++', marca 'C++'. En el campo 'Name' escribe: reportes . Dale clic en 'OK'.
+3
+3. Guardarlo dentro de tu carpeta cpp/
+Te va a pedir dónde guardar el proyecto. Navega hasta la carpeta de tu proyecto Germa66 y guárdalo DENTRO de la carpeta cpp/ que ya tienes (por ejemplo, como 'reportes.dev'). Dale Guardar.
+4
+4. Borrar el archivo de ejemplo
+Se abre un archivo llamado main.cpp con un código de ejemplo ('Hello World') que Dev-C++ crea automáticamente. Borra TODO ese contenido de adentro (Ctrl+A para seleccionar todo, luego Suprimir) — lo vamos a reemplazar con tu main.cpp real en el siguiente paso.
+5
+5. Agregar los archivos .cpp de src/
+En el panel izquierdo ('Project'), haz clic derecho sobre 'reportes' (el nombre del proyecto) → 'Add to Project...'. Se abre un explorador de archivos: navega a tu carpeta cpp/src/ y selecciona estos 4 archivos a la vez (con Ctrl+clic): ArmamentoPesado.cpp, MotorReportes.cpp, RecursoMilitar.cpp, TrajeCombate.cpp. Dale Abrir.
+6
+6. Pegar el contenido real de main.cpp
+Ahora sí, en el archivo main.cpp que quedó vacío, tenemos que pegar el contenido real de tu cpp/src/main.cpp. Ábrelo en VS Code, copia todo su contenido (Ctrl+A, Ctrl+C), y pégalo dentro del main.cpp vacío en Dev-C++ (Ctrl+V). Guarda con Ctrl+S.
+7
+7. Indicarle dónde están los .h (include)
+Dev-C++ necesita saber dónde están los archivos .h (las carpetas 'include'). Ve a Project → Project Options → pestaña 'Directories' → sub-pestaña 'Include Directories'. Dale clic al botón con los tres puntos (...) y selecciona tu carpeta cpp/include/. Dale Add, luego OK.
+8
+8. Compilar
+Ve al menú Execute → Compile (o presiona F9). Debería decir 'Compiling succesful' sin errores rojos. Si sale algún error, mandame una captura de pantalla completa de esa ventana.
+ 
+
+
+
+Si sale advertencias pero no errores, seguir estos paso, Si no sale nada malo, como errores o advertencias, saltar estos pasos.
+
+
+
+ 1. Abrir Project Options → Compiler
+Ve a Project → Project Options. Busca la pestaña 'Compiler' (o 'Settings', según la versión).
+2
+2. Buscar 'Language Standard'
+Dentro de esa pestaña hay una lista de opciones organizadas en categorías. Busca una que diga algo como 'Language Standard' o 'C++ Standard' (puede estar bajo 'Code Generation').
+3
+3. Elegir C++17
+En el menú desplegable de esa opción, elige 'ISO C++17 (-std=c++17)'.
+4
+4. Recompilar
+Dale OK, y luego Execute → Compile (F9) de nuevo. Ahora no debería salir ninguna advertencia.

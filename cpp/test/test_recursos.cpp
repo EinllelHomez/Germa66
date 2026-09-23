@@ -38,11 +38,32 @@ static void test_reporte_completo() {
     std::cout << "OK: el reporte agrupa correctamente los datos de ejemplo\n";
 }
 
+static void test_indicadores_ampliados() {
+    MotorReportes motor;
+    motor.cargarInventarioCSV("data/inventario.csv");
+    motor.cargarPedidosCSV("data/pedidos.csv");
+    motor.cargarCyborgsCSV("data/cyborgs.csv");
+
+    // 15+2+8+1+20 = 46 unidades en total, sin importar la categoría.
+    assert(motor.totalUnidadesInventario() == 46);
+
+    // ARM-002 (2/5, déficit 3) está más lejos de su mínimo que RS-002 (1/3, déficit 2).
+    auto critico = motor.itemCritico();
+    assert(critico != nullptr);
+    assert(critico->getId() == "ARM-002");
+
+    auto porEstado = motor.cyborgsPorEstado();
+    assert(porEstado.at("activo") == 2);
+    assert(porEstado.at("en_mantenimiento") == 1);
+    std::cout << "OK: calcula total de inventario, ítem crítico y cyborgs por estado\n";
+}
+
 int main() {
     test_stock_no_baja_de_cero();
     test_verifica_stock_minimo();
     test_herencia_describe_distinto();
     test_reporte_completo();
+    test_indicadores_ampliados();
     std::cout << "\nTodas las pruebas pasaron.\n";
     return 0;
 }

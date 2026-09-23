@@ -61,6 +61,21 @@ void MotorReportes::cargarPedidosCSV(const std::string& ruta) {
     }
 }
 
+// Formato esperado: id,codigo,estado
+void MotorReportes::cargarCyborgsCSV(const std::string& ruta) {
+    std::ifstream archivo(ruta);
+    if (!archivo.is_open()) throw std::runtime_error("No se pudo abrir " + ruta);
+
+    std::string linea;
+    std::getline(archivo, linea); // encabezado
+    while (std::getline(archivo, linea)) {
+        if (linea.empty()) continue;
+        auto c = splitCSV(linea);
+        if (c.size() < 3) continue;
+        cyborgs.push_back({c[0], c[1], c[2]});
+    }
+}
+
 std::map<std::string, int> MotorReportes::stockPorCategoria() const {
     std::map<std::string, int> resultado;
     for (const auto& item : inventario) resultado[item->getCategoria()] += item->getCantidad();
@@ -77,6 +92,28 @@ std::map<std::string, int> MotorReportes::pedidosPorEstado() const {
     std::map<std::string, int> resultado;
     for (const auto& p : pedidos) resultado[p.estado]++;
     return resultado;
+}
+
+std::map<std::string, int> MotorReportes::cyborgsPorEstado() const {
+    std::map<std::string, int> resultado;
+    for (const auto& cy : cyborgs) resultado[cy.estado]++;
+    return resultado;
+}
+
+int MotorReportes::totalUnidadesInventario() const {
+    int total = 0;
+    for (const auto& item : inventario) total += item->getCantidad();
+    return total;
+}
+
+std::shared_ptr<RecursoMilitar> MotorReportes::itemCritico() const {
+    std::shared_ptr<RecursoMilitar> peor = nullptr;
+    int mayorDeficit = 0;
+    for (const auto& item : itemsBajoMinimo()) {
+        int deficit = item->getLimiteMinimo() - item->getCantidad();
+        if (!peor || deficit > mayorDeficit) { peor = item; mayorDeficit = deficit; }
+    }
+    return peor;
 }
 
 static std::string jsonEscape(const std::string& s) {
@@ -108,6 +145,22 @@ std::string MotorReportes::generarReporteJSON() const {
         json << (primero ? "" : ",") << "\n    \"" << jsonEscape(estado) << "\": " << total;
         primero = false;
     }
-    json << "\n  }\n}\n";
+    json << "\n  },\n  \"cyborgsPorEstado\": {";
+    primero = true;
+    for (const auto& [estado, total] : cyborgsPorEstado()) {
+        json << (primero ? "" : ",") << "\n    \"" << jsonEscape(estado) << "\": " << total;
+        primero = false;
+    }
+    json << "\n  },\n  \"totalUnidadesInventario\": " << totalUnidadesInventario() << ",\n  \"itemCritico\": ";
+    auto critico = itemCritico();
+    if (critico) {
+        json << "{\"id\": \"" << jsonEscape(critico->getId())
+             << "\", \"nombre\": \"" << jsonEscape(critico->getNombre())
+             << "\", \"cantidad\": " << critico->getCantidad()
+             << ", \"minimo\": " << critico->getLimiteMinimo() << "}";
+    } else {
+        json << "null";
+    }
+    json << "\n}\n";
     return json.str();
-}
+} 
