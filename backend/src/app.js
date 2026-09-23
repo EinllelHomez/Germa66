@@ -19,7 +19,7 @@ function createApp(pool) {
   app.use("/api/clientes",   require("./routes/clientes.routes")(pool));
   app.use("/api/reportes",   require("./routes/reportes.routes")(pool));
   //app.use("/api/pedidos",    require("./routes/pedidos.routes")(pool));
-  //app.use("/api/reportes",   require("./routes/reportes.routes")(pool));
+  
 
   app.use("/api", (req, res) => res.status(404).json({ error: "Ruta no encontrada." }));
   app.use(express.static(path.join(__dirname, "../../frontend")));
