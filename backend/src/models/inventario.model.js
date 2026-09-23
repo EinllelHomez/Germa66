@@ -1,6 +1,6 @@
 // Modelo Inventario (RF-02). Toda consulta SQL sobre inventario vive aquí;
 // el controlador solo llama estas funciones, nunca escribe SQL directamente.
-const SELECT_ITEM = `SELECT id, codigo, nombre, categoria, cantidad, estado, ubicacion FROM inventario`;
+const SELECT_ITEM = `SELECT id, codigo, nombre, categoria, cantidad, minimo, estado, ubicacion FROM inventario`;
 
 module.exports = (pool) => ({
   async listar() {
@@ -18,18 +18,18 @@ module.exports = (pool) => ({
     return rows.length > 0;
   },
 
-  async crear({ codigo, nombre, categoria, cantidad, estado, ubicacion }) {
+  async crear({ codigo, nombre, categoria, cantidad, minimo, estado, ubicacion }) {
     const [info] = await pool.query(
-      "INSERT INTO inventario (codigo, nombre, categoria, cantidad, estado, ubicacion) VALUES (?,?,?,?,?,?)",
-      [codigo, nombre, categoria, cantidad, estado || "disponible", ubicacion || null]
+      "INSERT INTO inventario (codigo, nombre, categoria, cantidad, minimo, estado, ubicacion) VALUES (?,?,?,?,?,?,?)",
+      [codigo, nombre, categoria, cantidad, minimo ?? 5, estado || "disponible", ubicacion || null]
     );
     return this.buscarPorId(info.insertId);
   },
 
-  async actualizar(id, { nombre, categoria, cantidad, estado, ubicacion }) {
+  async actualizar(id, { nombre, categoria, cantidad, minimo, estado, ubicacion }) {
     await pool.query(
-      "UPDATE inventario SET nombre = ?, categoria = ?, cantidad = ?, estado = ?, ubicacion = ? WHERE id = ?",
-      [nombre, categoria, cantidad, estado, ubicacion || null, id]
+      "UPDATE inventario SET nombre = ?, categoria = ?, cantidad = ?, minimo = ?, estado = ?, ubicacion = ? WHERE id = ?",
+      [nombre, categoria, cantidad, minimo, estado, ubicacion || null, id]
     );
     return this.buscarPorId(id);
   },

@@ -14,7 +14,7 @@ module.exports = (pool) => {
     },
 
     async create(req, res) {
-      const { codigo, nombre, categoria, cantidad, estado, ubicacion } = req.body || {};
+      const { codigo, nombre, categoria, cantidad, minimo, estado, ubicacion } = req.body || {};
       if (!codigo || !nombre || !categoria || cantidad === undefined) {
         return res.status(400).json({ error: "Código, nombre, categoría y cantidad son obligatorios." });
       }
@@ -28,6 +28,10 @@ module.exports = (pool) => {
       if (!Number.isInteger(cantidadNum) || cantidadNum < 0) {
         return res.status(400).json({ error: "La cantidad no puede ser negativa." });
       }
+      const minimoNum = minimo === undefined ? 5 : Number(minimo);
+      if (!Number.isInteger(minimoNum) || minimoNum < 0) {
+        return res.status(400).json({ error: "El mínimo no puede ser negativo." });
+      }
       const codigoLimpio = String(codigo).trim();
       if (await Inventario.existeCodigo(codigoLimpio)) {
         return res.status(409).json({ error: "Ya existe un ítem con ese código." });
@@ -37,6 +41,7 @@ module.exports = (pool) => {
         nombre: String(nombre).trim(),
         categoria,
         cantidad: cantidadNum,
+        minimo: minimoNum,
         estado,
         ubicacion,
       });
@@ -49,10 +54,11 @@ module.exports = (pool) => {
       const actual = await Inventario.buscarPorId(id);
       if (!actual) return res.status(404).json({ error: "Ítem no encontrado." });
 
-      const { nombre, categoria, cantidad, estado, ubicacion } = req.body || {};
+      const { nombre, categoria, cantidad, minimo, estado, ubicacion } = req.body || {};
       const nuevaCategoria = categoria !== undefined ? categoria : actual.categoria;
       const nuevoEstado = estado !== undefined ? estado : actual.estado;
       const nuevaCantidad = cantidad !== undefined ? Number(cantidad) : actual.cantidad;
+      const nuevoMinimo = minimo !== undefined ? Number(minimo) : actual.minimo;
 
       if (!CATEGORIAS.includes(nuevaCategoria)) {
         return res.status(400).json({ error: "Categoría inválida." });
@@ -63,10 +69,14 @@ module.exports = (pool) => {
       if (!Number.isInteger(nuevaCantidad) || nuevaCantidad < 0) {
         return res.status(400).json({ error: "La cantidad no puede ser negativa." });
       }
+      if (!Number.isInteger(nuevoMinimo) || nuevoMinimo < 0) {
+        return res.status(400).json({ error: "El mínimo no puede ser negativo." });
+      }
       const actualizado = await Inventario.actualizar(id, {
         nombre: nombre !== undefined ? String(nombre).trim() : actual.nombre,
         categoria: nuevaCategoria,
         cantidad: nuevaCantidad,
+        minimo: nuevoMinimo,
         estado: nuevoEstado,
         ubicacion: ubicacion !== undefined ? ubicacion : actual.ubicacion,
       });

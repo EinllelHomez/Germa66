@@ -17,8 +17,8 @@
       desc: 'Directorio de reinos, contacto, ubicación y estado de cuenta.' },
     { id: 'pedidos', name: 'Pedidos', color: 'var(--suit-green)', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
       desc: 'Solicitudes de recursos; descuenta o reserva stock al confirmar.' },
-    { id: 'reportes', name: 'Reportes', color: 'var(--suit-pink)', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)',
-      desc: 'Indicadores de stock, cyborgs y pedidos con filtros.' },
+    { id: 'reportes', name: 'Reportes', color: 'var(--suit-pink)', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      desc: 'Indicadores de stock, cyborgs y pedidos, calculados por el motor en C++.' },
   ];
   const ADMIN_VIEWS = [
     { id: 'usuarios', name: 'Usuarios y roles' },
@@ -117,6 +117,7 @@
     const c = $('#content');
     if (view === 'inicio') renderHome(c);
     else if (view === 'inventario') renderInventario(c);
+    else if (view === 'reportes') renderReportes(c);
     else if (view === 'cyborgs') renderCyborgs(c);
     else if (view === 'clientes') renderClientes(c);
     else if (view === 'usuarios') renderUsers(c);
@@ -161,6 +162,7 @@
         field('Nombre', el('input', { name: 'nombre', required: true })),
         field('Categoría', el('select', { name: 'categoria' }, INV_CATEGORIAS.map((v) => el('option', { value: v }, v)))),
         field('Cantidad', el('input', { name: 'cantidad', type: 'number', min: 0, required: true, value: 0 })),
+        field('Mínimo', el('input', { name: 'minimo', type: 'number', min: 0, required: true, value: 5 })),
         field('Ubicación', el('input', { name: 'ubicacion' })),
         el('button', { class: 'btn primary', type: 'submit' }, 'Registrar')),
       msg);
@@ -181,13 +183,15 @@
       try {
         const items = await api('/inventario');
         tableBox.replaceChildren(items.length ? el('table', {},
-          el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Categoría', 'Cantidad', 'Estado', 'Ubicación', ''].map((h) => el('th', {}, h)))),
+          el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Categoría', 'Cantidad', 'Mínimo', 'Estado', 'Ubicación', ''].map((h) => el('th', {}, h)))),
           el('tbody', {}, items.map((it) => el('tr', {},
             el('td', {}, it.codigo), el('td', {}, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
             el('td', {}, el('input', { type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',
               'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value }) })),
+            el('td', {}, el('input', { type: 'number', min: 0, value: it.minimo, style: 'width:5.5rem',
+              'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value }) })),
             el('td', {}, el('select', { 'aria-label': `Estado de ${it.codigo}`, onchange: (e) => patch(it.id, { estado: e.target.value }) },
               INV_ESTADOS.map((v) => el('option', { value: v, selected: v === it.estado }, v)))),
             el('td', {}, it.ubicacion || ''),
@@ -351,6 +355,48 @@
       try { await api('/clientes/' + id, { method: 'PATCH', body }); setMsg(msg, 'Cambios guardados.', true); }
       catch (ex) { setMsg(msg, ex.message, false); }
       await loadTable();
+    }
+  }
+
+  async function renderReportes(c) {
+    c.replaceChildren(el('h2', {}, 'Reportes'), el('p', { class: 'muted' }, 'Indicadores calculados por el motor en C++ a partir de tus datos reales (RF-06).'));
+    const box = el('div');
+    c.append(box);
+    await cargar();
+
+    async function cargar() {
+      box.replaceChildren(el('p', { class: 'muted' }, 'Calculando\u2026'));
+      try {
+        const r = await api('/reportes');
+        const tablaConteo = (titulo, datos) => el('div', { class: 'panel' },
+          el('h3', {}, titulo),
+          Object.keys(datos).length
+            ? el('table', {}, el('tbody', {}, Object.entries(datos).map(([k, v]) =>
+                el('tr', {}, el('td', {}, k), el('td', {}, String(v))))))
+            : el('p', { class: 'empty' }, 'Sin datos todav\u00eda.'));
+
+        box.replaceChildren(
+          el('div', { class: 'grid' },
+            el('article', { class: 'card' }, el('h3', {}, 'Total de unidades en inventario'),
+              el('p', { style: 'font-size:2rem;font-weight:700' }, String(r.totalUnidadesInventario))),
+            el('article', { class: 'card' }, el('h3', {}, '\u00cdtem m\u00e1s cr\u00edtico'),
+              r.itemCritico
+                ? el('p', {}, `${r.itemCritico.nombre} (${r.itemCritico.id}): ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} m\u00ednimo`)
+                : el('p', { class: 'empty' }, 'Ning\u00fan \u00edtem est\u00e1 bajo su m\u00ednimo.'))),
+          tablaConteo('Stock por categor\u00eda', r.stockPorCategoria),
+          tablaConteo('Cyborgs por estado', r.cyborgsPorEstado),
+          tablaConteo('Pedidos por estado', r.pedidosPorEstado),
+          el('div', { class: 'panel table-wrap' },
+            el('h3', {}, '\u00cdtems bajo el m\u00ednimo'),
+            r.itemsBajoMinimo.length ? el('table', {},
+              el('thead', {}, el('tr', {}, ['C\u00f3digo', 'Nombre', 'Cantidad', 'M\u00ednimo'].map((h) => el('th', {}, h)))),
+              el('tbody', {}, r.itemsBajoMinimo.map((it) => el('tr', {},
+                el('td', {}, it.id), el('td', {}, it.nombre), el('td', {}, String(it.cantidad)), el('td', {}, String(it.minimo))))))
+              : el('p', { class: 'empty' }, 'Ning\u00fan \u00edtem est\u00e1 bajo el m\u00ednimo.')));
+      } catch (ex) {
+        box.replaceChildren(el('p', { class: 'msg err' }, ex.message),
+          el('button', { class: 'btn', type: 'button', onclick: cargar }, 'Reintentar'));
+      }
     }
   }
 

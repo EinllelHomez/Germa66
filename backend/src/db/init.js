@@ -9,6 +9,21 @@ async function initDatabase(pool) {
     await pool.query(stmt);
   }
   await pool.query("INSERT IGNORE INTO roles (nombre) VALUES (\"Administrador\"), (\"Operativo\")");
+  await migrarColumnasNuevas(pool);
+}
+
+// Agrega columnas nuevas a bases de datos que ya existían antes de que se agregaran
+// al schema.sql (CREATE TABLE IF NOT EXISTS no las crea en tablas ya existentes).
+// Se ejecuta cada vez que arranca el servidor; si la columna ya existe, no hace nada.
+async function migrarColumnasNuevas(pool) {
+  const [[col]] = await pool.query(
+    `SELECT COUNT(*) AS existe FROM information_schema.columns
+     WHERE table_schema = DATABASE() AND table_name = 'inventario' AND column_name = 'minimo'`
+  );
+  if (!col.existe) {
+    await pool.query("ALTER TABLE inventario ADD COLUMN minimo INT NOT NULL DEFAULT 5 AFTER cantidad");
+    console.log("Migración aplicada: se agregó la columna 'minimo' a inventario.");
+  }
 }
 
 module.exports = { initDatabase };

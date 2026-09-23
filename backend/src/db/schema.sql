@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS inventario (
   nombre    VARCHAR(120) NOT NULL,
   categoria ENUM('arma','raid_suit','artefacto') NOT NULL,
   cantidad  INT NOT NULL DEFAULT 0,
+  minimo    INT NOT NULL DEFAULT 5,
   estado    ENUM('disponible','en_mantenimiento','agotado','baja') NOT NULL DEFAULT 'disponible',
   ubicacion VARCHAR(120) NULL,
   CONSTRAINT chk_inv_cantidad CHECK (cantidad >= 0)

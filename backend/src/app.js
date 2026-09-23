@@ -17,6 +17,7 @@ function createApp(pool) {
   // Sprint 2 y 3: se montan aquí los demás módulos
   app.use("/api/cyborgs",    require("./routes/cyborgs.routes")(pool));
   app.use("/api/clientes",   require("./routes/clientes.routes")(pool));
+  app.use("/api/reportes",   require("./routes/reportes.routes")(pool));
   //app.use("/api/pedidos",    require("./routes/pedidos.routes")(pool));
   //app.use("/api/reportes",   require("./routes/reportes.routes")(pool));
 
