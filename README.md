@@ -65,7 +65,7 @@ Las tablas de inventario, cyborgs, reinos_clientes y pedidos ya existen en `sche
 
 ## Módulo C++  -- Solo se decarga el instalador de C++, Si van a editar el C++, si no lo van a tocar, no es necesario, ya que es un .exe
 
-Abrir el descargador de c++, que estta en el repositorio.
+Abrir el descargador de c++, que esta en el repositorio.
 Despues de descargar seguir estos pasos.
 1. Crear un proyecto nuevo
 En Dev-C++, ve al menú de arriba: File → New → Project...

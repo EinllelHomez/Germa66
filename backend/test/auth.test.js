@@ -2,6 +2,8 @@ process.env.DB_NAME = 'germa66_test';
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const env = require('../src/config/env');
 const { createPool } = require('../src/db/pool');
 const { initDatabase } = require('../src/db/init');
 const { createApp } = require('../src/app');
@@ -81,4 +83,19 @@ test('autenticación responde en menos de 1 segundo (RNF-03)', async () => {
   const t0 = Date.now();
   await login('admin@test.com', 'Admin123*');
   assert.ok(Date.now() - t0 < 1000, 'tardó ' + (Date.now() - t0) + ' ms');
+});
+
+test('RNF-03: un token expirado se rechaza con 401', async () => {
+  const payload = { id: 1, nombre: 'Admin', email: 'admin@test.com', rol: 'Administrador' };
+  const tokenExpirado = jwt.sign(payload, env.jwtSecret, { expiresIn: -10 }); 
+  const { status, data } = await call('GET', '/api/users', null, tokenExpirado);
+  assert.strictEqual(status, 401);
+  assert.match(data.error, /inválida o expirada/);
+});
+
+test('RNF-03: un token alterado (firma inválida) se rechaza con 401', async () => {
+  const tokenValido = await login('admin@test.com', 'Admin123*');
+  const tokenAlterado = tokenValido.slice(0, -3) + 'xyz'; 
+  const { status } = await call('GET', '/api/users', null, tokenAlterado);
+  assert.strictEqual(status, 401);
 });
