@@ -1,16 +1,19 @@
 // Modelo Inventario (RF-02). Toda consulta SQL sobre inventario vive aquí;
 // el controlador solo llama estas funciones, nunca escribe SQL directamente.
-const SELECT_ITEM = `SELECT id, codigo, nombre, categoria, cantidad, minimo, estado, ubicacion FROM inventario`;
+const SELECT_ITEM = `SELECT id, codigo, nombre, categoria, cantidad, minimo, estado, ubicacion,
+  (cantidad <= minimo) AS bajo_minimo FROM inventario`;
 
 module.exports = (pool) => ({
+  // RF-06: cada fila trae bajo_minimo (0/1) calculado por la propia consulta,
+  // así el frontend puede resaltarlo sin tener que recalcularlo aparte.
   async listar() {
     const [rows] = await pool.query(SELECT_ITEM + " ORDER BY id");
-    return rows;
+    return rows.map((r) => ({ ...r, bajo_minimo: !!r.bajo_minimo }));
   },
 
   async buscarPorId(id) {
     const [[item]] = await pool.query(SELECT_ITEM + " WHERE id = ?", [id]);
-    return item || null;
+    return item ? { ...item, bajo_minimo: !!item.bajo_minimo } : null;
   },
 
   async existeCodigo(codigo) {

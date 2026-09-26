@@ -175,17 +175,24 @@
       } catch (ex) { setMsg(msg, ex.message, false); }
     });
 
+    const alertaBox = el('p', { class: 'msg' });
     const tableBox = el('div', { class: 'panel table-wrap' });
-    c.append(form, tableBox);
+    c.append(form, alertaBox, tableBox);
     await loadTable();
 
     async function loadTable() {
       try {
         const items = await api('/inventario');
+        const bajos = items.filter((it) => it.bajo_minimo).length;
+        alertaBox.className = bajos ? 'msg err' : 'msg ok';
+        alertaBox.textContent = bajos
+          ? `\u26a0 ${bajos} ítem(s) por debajo del mínimo (RF-06).`
+          : 'Todo el inventario está por encima de su mínimo.';
         tableBox.replaceChildren(items.length ? el('table', {},
           el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Categoría', 'Cantidad', 'Mínimo', 'Estado', 'Ubicación', ''].map((h) => el('th', {}, h)))),
-          el('tbody', {}, items.map((it) => el('tr', {},
-            el('td', {}, it.codigo), el('td', {}, it.nombre),
+          el('tbody', {}, items.map((it) => el('tr', { class: it.bajo_minimo ? 'row-alerta' : '' },
+            el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'badge-alerta', title: 'Por debajo del mínimo (RF-06)' }, ' \u26a0 bajo mínimo') : ''),
+            el('td', {}, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
             el('td', {}, el('input', { type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',

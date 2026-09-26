@@ -96,6 +96,9 @@ td select { width: auto; padding: .3rem .5rem; }
 .msg { margin: .8rem 0 0; font-weight: 500; }
 .msg.ok { color: var(--ok); } .msg.err { color: var(--danger); }
 .empty { padding: 2rem 1rem; text-align: center; color: var(--muted); }
+/* RF-06: alerta visual de stock bajo mínimo */
+.row-alerta { background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.badge-alerta { display: inline-block; margin-left: .4rem; font-size: .78rem; font-weight: 700; color: var(--danger); }
 
 /* Móvil y tablet */
 @media (max-width: 860px) {
