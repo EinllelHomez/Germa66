@@ -1,6 +1,4 @@
--- Sistema Germa 66 - Esquema relacional MySQL (RNF-06: PK/FK y sin duplicados)
 
--- ===== RF-01 Seguridad y roles =====
 CREATE TABLE IF NOT EXISTS roles (
   id     INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(30) NOT NULL UNIQUE
@@ -17,7 +15,6 @@ CREATE TABLE IF NOT EXISTS usuarios (
   CONSTRAINT fk_usuario_rol FOREIGN KEY (rol_id) REFERENCES roles(id)
 ) ENGINE=InnoDB;
 
--- Clase AuditoriaSeguridad del diagrama UML
 CREATE TABLE IF NOT EXISTS auditoria_seguridad (
   id               INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id       INT NULL,
@@ -27,7 +24,6 @@ CREATE TABLE IF NOT EXISTS auditoria_seguridad (
   CONSTRAINT fk_audit_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- ===== RF-02 Inventario tecnológico (Sprint 2) =====
 CREATE TABLE IF NOT EXISTS inventario (
   id        INT AUTO_INCREMENT PRIMARY KEY,
   codigo    VARCHAR(40) NOT NULL UNIQUE,
@@ -40,7 +36,6 @@ CREATE TABLE IF NOT EXISTS inventario (
   CONSTRAINT chk_inv_cantidad CHECK (cantidad >= 0)
 ) ENGINE=InnoDB;
 
--- ===== RF-03 Cyborgs (Sprint 2) =====
 CREATE TABLE IF NOT EXISTS cyborgs (
   id        INT AUTO_INCREMENT PRIMARY KEY,
   codigo    VARCHAR(40) NOT NULL UNIQUE,
@@ -61,7 +56,6 @@ CREATE TABLE IF NOT EXISTS cyborg_equipamiento (
   CONSTRAINT chk_eq_cant CHECK (cantidad > 0)
 ) ENGINE=InnoDB;
 
--- ===== RF-04 Reinos clientes (Sprint 3) =====
 CREATE TABLE IF NOT EXISTS reinos_clientes (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   nombre        VARCHAR(120) NOT NULL UNIQUE,
@@ -70,7 +64,6 @@ CREATE TABLE IF NOT EXISTS reinos_clientes (
   estado_cuenta ENUM('al_dia','en_mora','suspendida') NOT NULL DEFAULT 'al_dia'
 ) ENGINE=InnoDB;
 
--- ===== RF-05 Pedidos (Sprint 3) =====
 CREATE TABLE IF NOT EXISTS pedidos (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   cliente_id INT NOT NULL,
