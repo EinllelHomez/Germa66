@@ -9,16 +9,26 @@
 
   // Módulos del sistema. "sprint" indica cuándo se construye (SRS / plan Scrum).
   const MODULES = [
-    { id: 'inventario', name: 'Inventario', color: 'var(--suit-red)', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
-      desc: 'Stock de armamento y Raid Suits: código, categoría, cantidad, estado y ubicación.' },
-    { id: 'cyborgs', name: 'Cyborgs', color: 'var(--suit-blue)', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
-      desc: 'Ficha de cada unidad y asignación de equipamiento con stock disponible.' },
-    { id: 'clientes', name: 'Reinos clientes', color: 'var(--suit-yellow)', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
-      desc: 'Directorio de reinos, contacto, ubicación y estado de cuenta.' },
-    { id: 'pedidos', name: 'Pedidos', color: 'var(--suit-green)', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
-      desc: 'Solicitudes de recursos; descuenta o reserva stock al confirmar.' },
-    { id: 'reportes', name: 'Reportes', color: 'var(--suit-pink)', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
-      desc: 'Indicadores de stock, cyborgs y pedidos, calculados por el motor en C++.' },
+    {
+      id: 'inventario', name: 'Inventario', color: 'var(--suit-red)', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      desc: 'Stock de armamento y Raid Suits: código, categoría, cantidad, estado y ubicación.'
+    },
+    {
+      id: 'cyborgs', name: 'Cyborgs', color: 'var(--suit-blue)', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      desc: 'Ficha de cada unidad y asignación de equipamiento con stock disponible.'
+    },
+    {
+      id: 'clientes', name: 'Reinos clientes', color: 'var(--suit-yellow)', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      desc: 'Directorio de reinos, contacto, ubicación y estado de cuenta.'
+    },
+    {
+      id: 'pedidos', name: 'Pedidos', color: 'var(--suit-green)', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
+      desc: 'Solicitudes de recursos; descuenta o reserva stock al confirmar.'
+    },
+    {
+      id: 'reportes', name: 'Reportes', color: 'var(--suit-pink)', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      desc: 'Indicadores de stock, cyborgs y pedidos, calculados por el motor en C++.'
+    },
   ];
   const ADMIN_VIEWS = [
     { id: 'usuarios', name: 'Usuarios y roles' },
@@ -69,7 +79,7 @@
   }
 
   async function logout(notify = true) {
-    if (notify && store.token) { try { await api('/auth/logout', { method: 'POST' }); } catch {} }
+    if (notify && store.token) { try { await api('/auth/logout', { method: 'POST' }); } catch { } }
     store.token = null; me = null;
     showLogin();
   }
@@ -171,8 +181,12 @@
       const body = Object.fromEntries(new FormData(form));
       try {
         await api('/inventario', { method: 'POST', body });
-        form.reset(); setMsg(msg, `Ítem ${body.codigo} registrado.`, true); await loadTable();
-      } catch (ex) { setMsg(msg, ex.message, false); }
+        form.reset();
+        mostrarPopup(`Ítem ${body.codigo} registrado con éxito.`, 'success');
+        await loadTable();
+      } catch (ex) {
+        mostrarPopup(ex.message, 'error');
+      }
     });
 
     const alertaBox = el('p', { class: 'msg' });
@@ -195,10 +209,14 @@
             el('td', {}, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
-            el('td', {}, el('input', { type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',
-              'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value }) })),
-            el('td', {}, el('input', { type: 'number', min: 0, value: it.minimo, style: 'width:5.5rem',
-              'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value }) })),
+            el('td', {}, el('input', {
+              type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',
+              'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value })
+            })),
+            el('td', {}, el('input', {
+              type: 'number', min: 0, value: it.minimo, style: 'width:5.5rem',
+              'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value })
+            })),
             el('td', {}, el('select', { 'aria-label': `Estado de ${it.codigo}`, onchange: (e) => patch(it.id, { estado: e.target.value }) },
               INV_ESTADOS.map((v) => el('option', { value: v, selected: v === it.estado }, v)))),
             el('td', {}, it.ubicacion || ''),
@@ -207,14 +225,19 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/inventario/' + id, { method: 'PATCH', body }); setMsg(msg, 'Cambios guardados.', true); }
-      catch (ex) { setMsg(msg, ex.message, false); }
+      try { await api('/inventario/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
     async function remove(id, codigo) {
       if (!confirm(`¿Eliminar el ítem ${codigo} del inventario?`)) return;
-      try { await api('/inventario/' + id, { method: 'DELETE' }); setMsg(msg, `Ítem ${codigo} eliminado.`, true); }
-      catch (ex) { setMsg(msg, ex.message, false); }
+      try {
+        await api('/inventario/' + id, { method: 'DELETE' });
+        mostrarPopup(`Ítem ${codigo} eliminado con éxito.`, 'success');
+      }
+      catch (ex) {
+        mostrarPopup(ex.message, 'error');
+      }
       await loadTable();
     }
   }
@@ -238,8 +261,12 @@
       const body = Object.fromEntries(new FormData(form));
       try {
         await api('/cyborgs', { method: 'POST', body });
-        form.reset(); setMsg(msg, `Cyborg ${body.codigo} registrado.`, true); await loadTable();
-      } catch (ex) { setMsg(msg, ex.message, false); }
+        form.reset();
+        mostrarPopup(`Cyborg ${body.codigo} registrado con éxito.`, 'success');
+        await loadTable();
+      } catch (ex) {
+        mostrarPopup(ex.message, 'error');
+      }
     });
 
     const tableBox = el('div', { class: 'panel table-wrap' });
@@ -262,8 +289,8 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patchEstado(id, estado) {
-      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); setMsg(msg, 'Cambios guardados.', true); }
-      catch (ex) { setMsg(msg, ex.message, false); }
+      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
 
@@ -285,9 +312,12 @@
         const body = Object.fromEntries(new FormData(asignarForm));
         try {
           await api(`/cyborgs/${cyborg.id}/equipamiento`, { method: 'POST', body });
-          setMsg(equipoMsg, 'Equipamiento asignado.', true);
-          await loadEquipoTable(); await loadTable();
-        } catch (ex) { setMsg(equipoMsg, ex.message, false); }
+          mostrarPopup('Equipamiento asignado y stock descontado.', 'success');
+          await loadEquipoTable();
+          await loadTable();
+        } catch (ex) {
+          mostrarPopup(ex.message, 'error');
+        }
       });
 
       const equipoTableBox = el('div', { class: 'panel table-wrap' });
@@ -308,9 +338,12 @@
       async function quitar(equipId) {
         try {
           await api(`/cyborgs/${cyborg.id}/equipamiento/${equipId}`, { method: 'DELETE' });
-          setMsg(equipoMsg, 'Equipamiento devuelto al inventario.', true);
-        } catch (ex) { setMsg(equipoMsg, ex.message, false); }
-        await loadEquipoTable(); await loadTable();
+          mostrarPopup('Equipamiento devuelto al inventario con éxito.', 'success');
+        } catch (ex) {
+          mostrarPopup(ex.message, 'error');
+        }
+        await loadEquipoTable();
+        await loadTable();
       }
     }
   }
@@ -334,8 +367,12 @@
       const body = Object.fromEntries(new FormData(form));
       try {
         await api('/clientes', { method: 'POST', body });
-        form.reset(); setMsg(msg, `Cliente ${body.nombre} registrado.`, true); await loadTable();
-      } catch (ex) { setMsg(msg, ex.message, false); }
+        form.reset();
+        mostrarPopup(`Cliente ${body.nombre} registrado con éxito.`, 'success');
+        await loadTable();
+      } catch (ex) {
+        mostrarPopup(ex.message, 'error');
+      }
     });
 
     const tableBox = el('div', { class: 'panel table-wrap' });
@@ -349,18 +386,22 @@
           el('thead', {}, el('tr', {}, ['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta'].map((h) => el('th', {}, h)))),
           el('tbody', {}, clientes.map((cl) => el('tr', {},
             el('td', {}, cl.nombre),
-            el('td', {}, el('input', { value: cl.contacto || '', 'aria-label': `Contacto de ${cl.nombre}`,
-              onchange: (e) => patch(cl.id, { contacto: e.target.value }) })),
-            el('td', {}, el('input', { value: cl.ubicacion || '', 'aria-label': `Ubicación de ${cl.nombre}`,
-              onchange: (e) => patch(cl.id, { ubicacion: e.target.value }) })),
+            el('td', {}, el('input', {
+              value: cl.contacto || '', 'aria-label': `Contacto de ${cl.nombre}`,
+              onchange: (e) => patch(cl.id, { contacto: e.target.value })
+            })),
+            el('td', {}, el('input', {
+              value: cl.ubicacion || '', 'aria-label': `Ubicación de ${cl.nombre}`,
+              onchange: (e) => patch(cl.id, { ubicacion: e.target.value })
+            })),
             el('td', {}, el('select', { 'aria-label': `Estado de cuenta de ${cl.nombre}`, onchange: (e) => patch(cl.id, { estadoCuenta: e.target.value }) },
               CLI_ESTADOS.map((v) => el('option', { value: v, selected: v === cl.estado_cuenta }, v))))))))
           : el('p', { class: 'empty' }, 'Aún no hay reinos clientes registrados.'));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/clientes/' + id, { method: 'PATCH', body }); setMsg(msg, 'Cambios guardados.', true); }
-      catch (ex) { setMsg(msg, ex.message, false); }
+      try { await api('/clientes/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
   }
@@ -379,7 +420,7 @@
           el('h3', {}, titulo),
           Object.keys(datos).length
             ? el('table', {}, el('tbody', {}, Object.entries(datos).map(([k, v]) =>
-                el('tr', {}, el('td', {}, k), el('td', {}, String(v))))))
+              el('tr', {}, el('td', {}, k), el('td', {}, String(v))))))
             : el('p', { class: 'empty' }, 'Sin datos todav\u00eda.'));
 
         box.replaceChildren(
@@ -425,8 +466,12 @@
       const body = Object.fromEntries(new FormData(form));
       try {
         await api('/users', { method: 'POST', body });
-        form.reset(); setMsg(msg, `Usuario ${body.email} creado.`, true); await loadTable();
-      } catch (ex) { setMsg(msg, ex.message, false); }
+        form.reset();
+        mostrarPopup(`Usuario ${body.email} creado con éxito.`, 'success');
+        await loadTable();
+      } catch (ex) {
+        mostrarPopup(ex.message, 'error');
+      }
     });
 
     const tableBox = el('div', { class: 'panel table-wrap' });
@@ -448,8 +493,8 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/users/' + id, { method: 'PATCH', body }); setMsg(msg, 'Cambios guardados.', true); }
-      catch (ex) { setMsg(msg, ex.message, false); }
+      try { await api('/users/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
   }
@@ -471,6 +516,23 @@
 
   function field(label, input) { return el('div', {}, el('label', {}, label), input); }
   function setMsg(node, text, ok) { node.textContent = text; node.className = 'msg ' + (ok ? 'ok' : 'err'); }
+  function mostrarPopup(mensaje, tipo = 'success') {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'toast-container';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    toast.className = `toast ${tipo}`;
+    toast.textContent = mensaje;
+    container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 100);
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
 
   // ---------- arranque: restaurar sesión ----------
   (async () => {
