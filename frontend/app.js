@@ -8,32 +8,126 @@
   let me = null;
 
   // Módulos del sistema. "sprint" indica cuándo se construye (SRS / plan Scrum).
+  // Cada capítulo lleva el color de un hermano Vinsmoke (ver DESIGN.md).
   const MODULES = [
     {
-      id: 'inventario', name: 'Inventario', color: 'var(--suit-red)', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      id: 'inventario', name: 'Inventario', color: 'var(--rojo)', onomato: 'ガシャン!', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
       desc: 'Stock de armamento y Raid Suits: código, categoría, cantidad, estado y ubicación.'
     },
     {
-      id: 'cyborgs', name: 'Cyborgs', color: 'var(--suit-blue)', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      id: 'cyborgs', name: 'Cyborgs', color: 'var(--azul-mar)', onomato: 'ビリビリ!', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
       desc: 'Ficha de cada unidad y asignación de equipamiento con stock disponible.'
     },
     {
-      id: 'clientes', name: 'Reinos clientes', color: 'var(--suit-yellow)', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      id: 'clientes', name: 'Reinos clientes', color: 'var(--dorado)', texto: 'var(--tinta)', onomato: 'ドン!', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
       desc: 'Directorio de reinos, contacto, ubicación y estado de cuenta.'
     },
     {
-      id: 'pedidos', name: 'Pedidos', color: 'var(--suit-green)', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
+      id: 'pedidos', name: 'Pedidos', color: 'var(--verde)', onomato: 'ザッ!', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
       desc: 'Solicitudes de recursos; descuenta o reserva stock al confirmar.'
     },
     {
-      id: 'reportes', name: 'Reportes', color: 'var(--suit-pink)', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      id: 'reportes', name: 'Reportes', color: 'var(--rosa)', onomato: 'ジャーン!', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
       desc: 'Indicadores de stock, cyborgs y pedidos, calculados por el motor en C++.'
     },
   ];
   const ADMIN_VIEWS = [
-    { id: 'usuarios', name: 'Usuarios y roles' },
-    { id: 'auditoria', name: 'Auditoría de accesos' },
+    { id: 'usuarios', name: 'Usuarios y roles', color: 'var(--tinta-suave)', onomato: 'コン!' },
+    { id: 'auditoria', name: 'Auditoría de accesos', color: 'var(--tinta-suave)', onomato: 'ギロッ' },
   ];
+  const INICIO = { id: 'inicio', name: 'Inicio', color: 'var(--papel-claro)', texto: 'var(--tinta)', sombra: 'var(--rojo)' };
+  // Índice de capítulos: Inicio es el prólogo; el resto se numera en orden.
+  const CAPITULOS = [INICIO, ...MODULES, ...ADMIN_VIEWS].map((v, i) =>
+    ({ ...v, cap: i === 0 ? 'Prólogo' : `Cap. ${String(i).padStart(2, '0')}` }));
+  const capitulo = (id) => CAPITULOS.find((v) => v.id === id);
+  const capVars = (v) => `--cap-color:${v.color};--cap-texto:${v.texto || 'var(--papel-claro)'};--cap-sombra:${v.sombra || v.color}`;
+
+  // Tono del sello según el estado (pendiente dorado, en proceso azul, completado verde, cancelado gris).
+  const TONO = {
+    disponible: 'verde', activo: 'verde', al_dia: 'verde', completado: 'verde',
+    en_mantenimiento: 'azul', en_proceso: 'azul',
+    pendiente: 'dorado', en_mora: 'dorado',
+    agotado: 'rojo',
+    baja: 'gris', suspendida: 'gris', cancelado: 'gris',
+  };
+
+  // ---------- movimiento (GSAP) y trazos (Rough.js); todo es opcional si la CDN falla ----------
+  const reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const anim = () => !reducir && !!window.gsap;
+  const token = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function entrada(nodes) {
+    if (!anim() || !nodes.length) return;
+    gsap.from(nodes, { opacity: 0, y: 16, scale: 0.96, duration: 0.45, ease: 'back.out(1.6)', stagger: 0.08, clearProps: 'opacity,transform' });
+  }
+  // Sacudida de impacto: 4 golpes de ±4px en 0.25s.
+  function impacto(node, delay = 0) {
+    if (!anim() || !node) return;
+    gsap.timeline({ delay })
+      .to(node, { x: -4, duration: 0.05 }).to(node, { x: 4, duration: 0.05 })
+      .to(node, { x: -4, duration: 0.05 }).to(node, { x: 4, duration: 0.05 })
+      .to(node, { x: 0, duration: 0.05 });
+  }
+  function animarVista(c) {
+    if (!anim()) return;
+    entrada(c.querySelectorAll(':scope > :not(.portada), .portada > *'));
+    const letras = c.querySelectorAll('.titulo-modulo .letra');
+    if (letras.length) gsap.from(letras, {
+      yPercent: -80, rotation: () => gsap.utils.random(-25, 25), opacity: 0,
+      duration: 0.4, ease: 'back.out(2.2)', stagger: 0.035, delay: 0.1, clearProps: 'all',
+    });
+    const ono = c.querySelector('.cabecera .onomato');
+    if (ono) gsap.from(ono, { scale: 2.2, opacity: 0, duration: 0.35, ease: 'back.out(2)', delay: 0.3 });
+  }
+
+  function trazoCircular(svg) {
+    if (!window.rough || !svg) return;
+    svg.replaceChildren();
+    const rc = rough.svg(svg);
+    svg.append(rc.circle(50, 50, 112, { stroke: token('--tinta'), strokeWidth: 2.5, roughness: 1.6 }));
+    svg.append(rc.circle(50, 50, 104, { stroke: token('--rojo'), strokeWidth: 1.5, roughness: 2.4 }));
+  }
+  // Borde irregular de "globo de grito" para los errores.
+  function bordeRugoso(node) {
+    if (!window.rough || !node.offsetWidth) return;
+    node.querySelector(':scope > svg.rugoso')?.remove();
+    const w = node.offsetWidth + 14, h = node.offsetHeight + 14;
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'rugoso'); svg.setAttribute('width', w); svg.setAttribute('height', h);
+    svg.setAttribute('aria-hidden', 'true');
+    svg.append(rough.svg(svg).rectangle(3, 3, w - 6, h - 6, { stroke: token('--tinta'), strokeWidth: 2.5, roughness: 2.6, bowing: 2.5 }));
+    node.prepend(svg);
+  }
+  // <svg><use href="#id"></svg> de los símbolos definidos en index.html.
+  function simbolo(id, clase) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('class', clase); s.setAttribute('viewBox', '0 0 100 100'); s.setAttribute('aria-hidden', 'true');
+    const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#' + id);
+    s.append(u);
+    return s;
+  }
+  function emblema(conTrazo) {
+    const caja = el('div', { class: 'emblema', 'aria-hidden': 'true' });
+    caja.append(simbolo('emblema', 'em'));
+    if (conTrazo) {
+      const t = document.createElementNS(NS, 'svg');
+      t.setAttribute('class', 'trazo'); t.setAttribute('viewBox', '-10 -10 120 120');
+      caja.append(t); trazoCircular(t);
+    }
+    return caja;
+  }
+
+  // Íconos propios de trazo grueso (sin emojis).
+  const ICONOS = {
+    alerta: '<path d="M12 3 2 20.5h20L12 3Z"/><path d="M12 10v4.5"/><path d="M12 17.5h.01"/>',
+    ok: '<path d="M4 12.5l5 5L20 6.5"/>',
+  };
+  function icono(nombre) {
+    const s = el('span', { class: 'icono', 'aria-hidden': 'true' });
+    s.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${ICONOS[nombre]}</svg>`;
+    return s;
+  }
 
   // ---------- utilidades ----------
   function el(tag, props = {}, ...children) {
@@ -76,7 +170,15 @@
     $('#login-view').hidden = false;
     $('#password').value = '';
     $('#email').focus();
+    if (anim()) {
+      gsap.timeline()
+        .from('.login-brand, #login-form', { opacity: 0, y: 20, scale: 0.96, duration: 0.45, ease: 'back.out(1.6)', stagger: 0.08, clearProps: 'opacity,transform' })
+        .from('.brand-number', { scale: 2.4, opacity: 0, duration: 0.35, ease: 'back.out(2)' }, '-=0.2')
+        .from('.onomato-login', { scale: 0, rotation: -40, duration: 0.3, ease: 'back.out(2.5)' }, '<')
+        .from('.hermanos i', { scaleY: 0, transformOrigin: 'bottom', stagger: 0.05, duration: 0.25, ease: 'back.out(2)' }, '<');
+    }
   }
+  trazoCircular($('.login-brand .trazo'));
 
   async function logout(notify = true) {
     if (notify && store.token) { try { await api('/auth/logout', { method: 'POST' }); } catch { } }
@@ -95,6 +197,8 @@
       await showApp();
     } catch (ex) {
       err.textContent = ex.message; err.hidden = false;
+      bordeRugoso(err);
+      impacto(err);
     } finally { btn.disabled = false; }
   });
   $('#logout-btn').addEventListener('click', () => logout());
@@ -106,18 +210,38 @@
   // ---------- navegación (RBAC en la interfaz; el servidor es quien realmente protege) ----------
   function buildNav() {
     const nav = $('#nav');
-    nav.replaceChildren(navBtn({ id: 'inicio', name: 'Inicio', color: 'var(--primary)' }));
+    nav.replaceChildren(navBtn(capitulo('inicio')));
     nav.append(el('div', { class: 'nav-group' }, 'Módulos'));
-    MODULES.forEach((m) => nav.append(navBtn(m, m.ready ? null : 'Próximo')));
+    MODULES.forEach((m) => nav.append(navBtn(capitulo(m.id), m.ready ? null : 'Próximo')));
     if (me.rol === 'Administrador') {
       nav.append(el('div', { class: 'nav-group' }, 'Administración'));
-      ADMIN_VIEWS.forEach((v) => nav.append(navBtn(v)));
+      ADMIN_VIEWS.forEach((v) => nav.append(navBtn(capitulo(v.id))));
     }
   }
   function navBtn(v, tag) {
-    return el('button', { type: 'button', 'data-view': v.id, style: `--dot:${v.color || 'var(--line)'}`, onclick: () => go(v.id) },
-      el('span', { class: 'dot' }), v.name, tag ? el('span', { class: 'tag' }, tag) : null);
+    return el('button', { type: 'button', 'data-view': v.id, style: capVars(v), onclick: () => go(v.id) },
+      el('span', { class: 'cap' }, v.cap), el('span', {}, v.name), tag ? el('span', { class: 'tag' }, tag) : null);
   }
+
+  // Cabecera de capítulo: pestaña con el número, título letra por letra y onomatopeya.
+  function cabecera(id, sub) {
+    const v = capitulo(id);
+    const letras = [...v.name].map((ch) => el('span', { class: 'letra' }, ch === ' ' ? ' ' : ch));
+    return el('header', { class: 'cabecera marco', style: `--acento:${v.color};--acento-texto:${v.texto || 'var(--papel-claro)'}` },
+      el('div', { class: 'carta', 'aria-hidden': 'true' }),
+      simbolo('rosa-vientos', 'rosa'),
+      el('span', { class: 'pestana' }, v.cap),
+      el('h1', { class: 'titulo-modulo' }, el('span', { class: 'sr-only' }, v.name), el('span', { 'aria-hidden': 'true' }, letras)),
+      el('p', { class: 'cabecera-sub' }, sub),
+      el('span', { class: 'onomato', 'aria-hidden': 'true' }, v.onomato || 'ドン!'));
+  }
+  const th = (h) => Array.isArray(h) ? el('th', { class: h[1] }, h[0]) : el('th', {}, h);
+  const thead = (cols) => el('thead', {}, el('tr', {}, cols.map(th)));
+  // Select de estado con un punto de tinta del color del sello delante.
+  const selectEstado = (estado, props, opciones) =>
+    el('span', { class: 'estado', 'data-tono': TONO[estado] || 'gris' },
+      el('span', { class: 'punto', 'aria-hidden': 'true' }),
+      el('select', props, opciones.map((v) => el('option', { value: v, selected: v === estado }, v))));
 
   function go(view) {
     document.querySelectorAll('.nav button').forEach((b) => {
@@ -133,46 +257,66 @@
     else if (view === 'usuarios') renderUsers(c);
     else if (view === 'auditoria') renderAudit(c);
     else renderPlaceholder(c, MODULES.find((m) => m.id === view));
+    animarVista(c);
     c.focus();
   }
 
   // ---------- vistas ----------
   async function renderHome(c) {
     const admin = me.rol === 'Administrador';
+    // Portada: una viñeta principal grande y cuatro indicadores pequeños alrededor.
+    const valores = {};
+    const stat = (key, label, color) => {
+      valores[key] = el('p', { class: 'stat-valor' }, '…');
+      return el('article', { class: 'vineta stat' },
+        el('span', { class: 'pestana' }, el('span', { class: 'cap-mini', style: `--cap-color:${color}` }), label),
+        valores[key]);
+    };
+    const statBajos = stat('bajos', 'Bajo el mínimo', 'var(--rojo)');
     c.replaceChildren(
-      el('div', { class: 'welcome-panel' },
-        el('img', { class: 'welcome-mark', src: 'assets/germa66-flag.png', alt: '', 'aria-hidden': 'true' }),
-        el('h2', {}, `Hola, ${me.nombre}`),
-        el('p', { class: 'muted' }, admin
-          ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
-          : 'Tu perfil es Operativo: registras datos y procesas solicitudes en los módulos.')),
-      el('div', { class: 'stats' }, el('p', { class: 'muted' }, 'Cargando indicadores…')),
-      el('h3', { class: 'section-heading' }, 'Módulos'),
-      el('div', { class: 'grid' }, MODULES.map((m) =>
-        el('article', { class: 'card', style: `--dot:${m.color}` },
-          el('h3', {}, m.name), el('p', {}, m.desc),
-          el('span', { class: 'chip' }, `${m.rf} · ${m.sprint}`)))));
+      el('section', { class: 'portada' },
+        el('article', { class: 'vineta bienvenida marco' },
+          el('div', { class: 'velocidad', 'aria-hidden': 'true' }),
+          el('div', { class: 'olas', 'aria-hidden': 'true' }),
+          el('span', { class: 'pestana' }, 'Prólogo'),
+          emblema(true),
+          el('p', { class: 'bienvenida-kicker' }, admin ? 'Administrador' : 'Operativo'),
+          el('h1', {}, `Hola, ${me.nombre}`),
+          el('p', { class: 'bienvenida-texto' }, admin
+            ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
+            : 'Tu perfil es Operativo: registras datos y procesas solicitudes en los módulos.')),
+        stat('items', 'Ítems en inventario', 'var(--rojo)'),
+        statBajos,
+        stat('cyborgs', 'Cyborgs registrados', 'var(--azul-mar)'),
+        stat('clientes', 'Reinos clientes', 'var(--dorado)')),
+      el('h2', { class: 'titulo-seccion' }, 'Índice de capítulos'),
+      el('ol', { class: 'indice' }, MODULES.map((m) => {
+        const v = capitulo(m.id);
+        return el('li', {}, el('button', { type: 'button', style: capVars(v), onclick: () => go(m.id) },
+          el('span', { class: 'cap' }, v.cap),
+          el('span', {}, el('span', { class: 'indice-nombre' }, m.name), el('span', { class: 'indice-desc' }, m.desc)),
+          el('span', { class: 'indice-meta' },
+            el('span', { class: 'sello ' + (m.ready ? 'verde' : 'dorado') }, m.ready ? 'En servicio' : 'Próximo'),
+            `${m.rf} · ${m.sprint}`)));
+      })));
 
     // Panel de mando: indicadores reales sacados de tus propias APIs (no son de adorno).
-    const statsBox = c.querySelector('.stats');
     const [inventario, cyborgs, clientes] = await Promise.all([
       api('/inventario').catch(() => []),
       api('/cyborgs').catch(() => []),
       api('/clientes').catch(() => []),
     ]);
     const bajoMinimo = inventario.filter((i) => i.bajo_minimo).length;
-    const stat = (label, value, color) => el('article', { class: 'stat-card', style: `--dot:${color}` },
-      el('p', { class: 'stat-value' }, String(value)), el('p', { class: 'stat-label' }, label));
-    statsBox.replaceChildren(
-      stat('Ítems en inventario', inventario.length, 'var(--suit-red)'),
-      stat('Bajo el mínimo', bajoMinimo, bajoMinimo ? 'var(--danger)' : 'var(--ok)'),
-      stat('Cyborgs registrados', cyborgs.length, 'var(--suit-blue)'),
-      stat('Reinos clientes', clientes.length, 'var(--suit-yellow)'));
+    valores.items.textContent = inventario.length;
+    valores.bajos.textContent = bajoMinimo;
+    valores.cyborgs.textContent = cyborgs.length;
+    valores.clientes.textContent = clientes.length;
+    if (bajoMinimo) { statBajos.classList.add('alerta'); impacto(statBajos, 0.5); }
   }
 
   function renderPlaceholder(c, m) {
     c.replaceChildren(
-      el('h2', {}, m.name),
+      cabecera(m.id, m.desc),
       el('div', { class: 'panel empty' },
         el('p', {}, `Este módulo (${m.rf}) se construye en el ${m.sprint}.`),
         el('p', {}, 'La ruta de la API y esta pantalla se agregan siguiendo el mismo patrón que Usuarios.')));
@@ -182,7 +326,7 @@
   const INV_ESTADOS = ['disponible', 'en_mantenimiento', 'agotado', 'baja'];
 
   async function renderInventario(c) {
-    c.replaceChildren(el('h2', {}, 'Inventario'), el('p', { class: 'muted' }, 'Stock de armamento, Raid Suits y artefactos (RF-02).'));
+    c.replaceChildren(cabecera('inventario', 'Stock de armamento, Raid Suits y artefactos (RF-02).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
@@ -202,6 +346,7 @@
       try {
         await api('/inventario', { method: 'POST', body });
         form.reset();
+        impacto(form);
         mostrarPopup(`Ítem ${body.codigo} registrado con éxito.`, 'success');
         await loadTable();
       } catch (ex) {
@@ -219,33 +364,33 @@
         const items = await api('/inventario');
         const bajos = items.filter((it) => it.bajo_minimo).length;
         alertaBox.className = bajos ? 'msg err' : 'msg ok';
-        alertaBox.textContent = bajos
-          ? `⚠ ${bajos} ítem(s) por debajo del mínimo (RF-06).`
-          : 'Todo el inventario está por encima de su mínimo.';
+        alertaBox.replaceChildren(icono(bajos ? 'alerta' : 'ok'), bajos
+          ? `${bajos} ítem(s) por debajo del mínimo (RF-06).`
+          : 'Todo el inventario está por encima de su mínimo.');
         tableBox.replaceChildren(items.length ? el('table', {},
-          el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Categoría', 'Cantidad', 'Mínimo', 'Estado', 'Ubicación', ''].map((h) => el('th', {}, h)))),
+          thead(['Código', 'Nombre', 'Categoría', ['Cantidad', 'num'], ['Mínimo', 'num'], 'Estado', 'Ubicación', '']),
           el('tbody', {}, items.map((it) => el('tr', { class: it.bajo_minimo ? 'row-alerta' : '' },
-            el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'badge-alerta', title: 'Por debajo del mínimo (RF-06)' }, ' ⚠ bajo mínimo') : ''),
+            el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'sello rojo', title: 'Por debajo del mínimo (RF-06)' }, 'Bajo mínimo') : ''),
             el('td', {}, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
-            el('td', {}, el('input', {
+            el('td', { class: 'num' }, el('input', {
               type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',
               'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value })
             })),
-            el('td', {}, el('input', {
+            el('td', { class: 'num' }, el('input', {
               type: 'number', min: 0, value: it.minimo, style: 'width:5.5rem',
               'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value })
             })),
-            el('td', {}, el('select', { 'aria-label': `Estado de ${it.codigo}`, onchange: (e) => patch(it.id, { estado: e.target.value }) },
-              INV_ESTADOS.map((v) => el('option', { value: v, selected: v === it.estado }, v)))),
+            el('td', {}, selectEstado(it.estado,
+              { 'aria-label': `Estado de ${it.codigo}`, onchange: (e) => patch(it.id, { estado: e.target.value }) }, INV_ESTADOS)),
             el('td', {}, it.ubicacion || ''),
             el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => remove(it.id, it.codigo) }, 'Eliminar'))))))
           : el('p', { class: 'empty' }, 'Aún no hay ítems registrados.'));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/inventario/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      try { await api('/inventario/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
@@ -265,7 +410,7 @@
   const CYB_ESTADOS = ['activo', 'en_mantenimiento', 'baja'];
 
   async function renderCyborgs(c) {
-    c.replaceChildren(el('h2', {}, 'Cyborgs'), el('p', { class: 'muted' }, 'Registro de unidades y asignación de equipamiento (RF-03).'));
+    c.replaceChildren(cabecera('cyborgs', 'Registro de unidades y asignación de equipamiento (RF-03).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
@@ -282,6 +427,7 @@
       try {
         await api('/cyborgs', { method: 'POST', body });
         form.reset();
+        impacto(form);
         mostrarPopup(`Cyborg ${body.codigo} registrado con éxito.`, 'success');
         await loadTable();
       } catch (ex) {
@@ -298,18 +444,18 @@
       try {
         const cyborgs = await api('/cyborgs');
         tableBox.replaceChildren(cyborgs.length ? el('table', {},
-          el('thead', {}, el('tr', {}, ['Código', 'Serie', 'Nombre', 'Estado', 'Ítems asignados', ''].map((h) => el('th', {}, h)))),
+          thead(['Código', 'Serie', 'Nombre', 'Estado', ['Ítems asignados', 'num'], '']),
           el('tbody', {}, cyborgs.map((cy) => el('tr', {},
             el('td', {}, cy.codigo), el('td', {}, cy.serie), el('td', {}, cy.nombre || ''),
-            el('td', {}, el('select', { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patchEstado(cy.id, e.target.value) },
-              CYB_ESTADOS.map((v) => el('option', { value: v, selected: v === cy.estado }, v)))),
-            el('td', {}, String(cy.items_asignados)),
+            el('td', {}, selectEstado(cy.estado,
+              { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patchEstado(cy.id, e.target.value) }, CYB_ESTADOS)),
+            el('td', { class: 'num' }, String(cy.items_asignados)),
             el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => renderEquipo(cy) }, 'Equipamiento'))))))
           : el('p', { class: 'empty' }, 'Aún no hay cyborgs registrados.'));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patchEstado(id, estado) {
-      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
@@ -332,6 +478,7 @@
         const body = Object.fromEntries(new FormData(asignarForm));
         try {
           await api(`/cyborgs/${cyborg.id}/equipamiento`, { method: 'POST', body });
+          impacto(asignarForm);
           mostrarPopup('Equipamiento asignado y stock descontado.', 'success');
           await loadEquipoTable();
           await loadTable();
@@ -342,15 +489,16 @@
 
       const equipoTableBox = el('div', { class: 'panel table-wrap' });
       equipoBox.replaceChildren(asignarForm, equipoTableBox);
+      entrada([asignarForm, equipoTableBox]);
       await loadEquipoTable();
 
       async function loadEquipoTable() {
         try {
           const items = await api(`/cyborgs/${cyborg.id}/equipamiento`);
           equipoTableBox.replaceChildren(items.length ? el('table', {},
-            el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Cantidad', ''].map((h) => el('th', {}, h)))),
+            thead(['Código', 'Nombre', ['Cantidad', 'num'], '']),
             el('tbody', {}, items.map((it) => el('tr', {},
-              el('td', {}, it.item_codigo), el('td', {}, it.item_nombre), el('td', {}, String(it.cantidad)),
+              el('td', {}, it.item_codigo), el('td', {}, it.item_nombre), el('td', { class: 'num' }, String(it.cantidad)),
               el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => quitar(it.id) }, 'Quitar'))))))
             : el('p', { class: 'empty' }, 'Este cyborg no tiene equipamiento asignado.'));
         } catch (ex) { equipoTableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
@@ -371,7 +519,7 @@
   const CLI_ESTADOS = ['al_dia', 'en_mora', 'suspendida'];
 
   async function renderClientes(c) {
-    c.replaceChildren(el('h2', {}, 'Reinos clientes'), el('p', { class: 'muted' }, 'Directorio de reinos y su estado de cuenta (RF-04).'));
+    c.replaceChildren(cabecera('clientes', 'Directorio de reinos y su estado de cuenta (RF-04).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
@@ -388,6 +536,7 @@
       try {
         await api('/clientes', { method: 'POST', body });
         form.reset();
+        impacto(form);
         mostrarPopup(`Cliente ${body.nombre} registrado con éxito.`, 'success');
         await loadTable();
       } catch (ex) {
@@ -403,7 +552,7 @@
       try {
         const clientes = await api('/clientes');
         tableBox.replaceChildren(clientes.length ? el('table', {},
-          el('thead', {}, el('tr', {}, ['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta'].map((h) => el('th', {}, h)))),
+          thead(['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta']),
           el('tbody', {}, clientes.map((cl) => el('tr', {},
             el('td', {}, cl.nombre),
             el('td', {}, el('input', {
@@ -414,20 +563,20 @@
               value: cl.ubicacion || '', 'aria-label': `Ubicación de ${cl.nombre}`,
               onchange: (e) => patch(cl.id, { ubicacion: e.target.value })
             })),
-            el('td', {}, el('select', { 'aria-label': `Estado de cuenta de ${cl.nombre}`, onchange: (e) => patch(cl.id, { estadoCuenta: e.target.value }) },
-              CLI_ESTADOS.map((v) => el('option', { value: v, selected: v === cl.estado_cuenta }, v))))))))
+            el('td', {}, selectEstado(cl.estado_cuenta,
+              { 'aria-label': `Estado de cuenta de ${cl.nombre}`, onchange: (e) => patch(cl.id, { estadoCuenta: e.target.value }) }, CLI_ESTADOS))))))
           : el('p', { class: 'empty' }, 'Aún no hay reinos clientes registrados.'));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/clientes/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      try { await api('/clientes/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
   }
 
   async function renderReportes(c) {
-    c.replaceChildren(el('h2', {}, 'Reportes'), el('p', { class: 'muted' }, 'Indicadores calculados por el motor en C++ a partir de tus datos reales (RF-06).'));
+    c.replaceChildren(cabecera('reportes', 'Indicadores calculados por el motor en C++ a partir de tus datos reales (RF-06).'));
     const box = el('div');
     c.append(box);
     await cargar();
@@ -436,31 +585,34 @@
       box.replaceChildren(el('p', { class: 'muted' }, 'Calculando…'));
       try {
         const r = await api('/reportes');
-        const tablaConteo = (titulo, datos) => el('div', { class: 'panel' },
+        const tablaConteo = (titulo, grupo, datos) => el('div', { class: 'panel table-wrap' },
           el('h3', {}, titulo),
           Object.keys(datos).length
-            ? el('table', {}, el('tbody', {}, Object.entries(datos).map(([k, v]) =>
-              el('tr', {}, el('td', {}, k), el('td', {}, String(v))))))
+            ? el('table', {}, thead([grupo, ['Total', 'num']]), el('tbody', {}, Object.entries(datos).map(([k, v]) =>
+              el('tr', {}, el('td', {}, k), el('td', { class: 'num' }, String(v))))))
             : el('p', { class: 'empty' }, 'Sin datos todavía.'));
 
-        box.replaceChildren(
-          el('div', { class: 'grid' },
-            el('article', { class: 'card' }, el('h3', {}, 'Total de unidades en inventario'),
-              el('p', { style: 'font-size:2rem;font-weight:700' }, String(r.totalUnidadesInventario))),
-            el('article', { class: 'card' }, el('h3', {}, 'Ítem más crítico'),
-              r.itemCritico
-                ? el('p', {}, `${r.itemCritico.nombre} (${r.itemCritico.id}): ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} mínimo`)
-                : el('p', { class: 'empty' }, 'Ningún ítem está bajo su mínimo.'))),
-          tablaConteo('Stock por categoría', r.stockPorCategoria),
-          tablaConteo('Cyborgs por estado', r.cyborgsPorEstado),
-          tablaConteo('Pedidos por estado', r.pedidosPorEstado),
-          el('div', { class: 'panel table-wrap' },
+        const mosaico = el('div', { class: 'mosaico' },
+          el('article', { class: 'panel destacada' }, el('h3', {}, 'Total de unidades en inventario'),
+            el('p', { class: 'cifra' }, String(r.totalUnidadesInventario))),
+          el('article', { class: 'panel' + (r.itemCritico ? ' alerta' : '') }, el('h3', {}, 'Ítem más crítico'),
+            r.itemCritico
+              ? [el('p', { class: 'critico-nombre' }, r.itemCritico.nombre),
+                el('p', {}, `${r.itemCritico.id}: ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} mínimo`),
+                el('span', { class: 'sello rojo' }, 'Bajo mínimo')]
+              : el('p', { class: 'empty' }, 'Ningún ítem está bajo su mínimo.')),
+          tablaConteo('Stock por categoría', 'Categoría', r.stockPorCategoria),
+          tablaConteo('Cyborgs por estado', 'Estado', r.cyborgsPorEstado),
+          tablaConteo('Pedidos por estado', 'Estado', r.pedidosPorEstado),
+          el('div', { class: 'panel table-wrap ancha' },
             el('h3', {}, 'Ítems bajo el mínimo'),
             r.itemsBajoMinimo.length ? el('table', {},
-              el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Cantidad', 'Mínimo'].map((h) => el('th', {}, h)))),
+              thead(['Código', 'Nombre', ['Cantidad', 'num'], ['Mínimo', 'num']]),
               el('tbody', {}, r.itemsBajoMinimo.map((it) => el('tr', {},
-                el('td', {}, it.id), el('td', {}, it.nombre), el('td', {}, String(it.cantidad)), el('td', {}, String(it.minimo))))))
+                el('td', {}, it.id), el('td', {}, it.nombre), el('td', { class: 'num' }, String(it.cantidad)), el('td', { class: 'num' }, String(it.minimo))))))
               : el('p', { class: 'empty' }, 'Ningún ítem está bajo el mínimo.')));
+        box.replaceChildren(mosaico);
+        entrada(mosaico.children);
       } catch (ex) {
         box.replaceChildren(el('p', { class: 'msg err' }, ex.message),
           el('button', { class: 'btn', type: 'button', onclick: cargar }, 'Reintentar'));
@@ -469,7 +621,7 @@
   }
 
   async function renderUsers(c) {
-    c.replaceChildren(el('h2', {}, 'Usuarios y roles'), el('p', { class: 'muted' }, 'Crea cuentas y define si son Administrador u Operativo.'));
+    c.replaceChildren(cabecera('usuarios', 'Crea cuentas y define si son Administrador u Operativo.'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
@@ -487,6 +639,7 @@
       try {
         await api('/users', { method: 'POST', body });
         form.reset();
+        impacto(form);
         mostrarPopup(`Usuario ${body.email} creado con éxito.`, 'success');
         await loadTable();
       } catch (ex) {
@@ -502,31 +655,31 @@
       try {
         const users = await api('/users');
         tableBox.replaceChildren(el('table', {},
-          el('thead', {}, el('tr', {}, ['Nombre', 'Correo', 'Rol', 'Estado', 'Creado', ''].map((h) => el('th', {}, h)))),
+          thead(['Nombre', 'Correo', 'Rol', 'Estado', 'Creado', '']),
           el('tbody', {}, users.map((u) => el('tr', {},
             el('td', {}, u.nombre), el('td', {}, u.email),
             el('td', {}, el('select', { 'aria-label': `Rol de ${u.nombre}`, disabled: u.id === me.id, onchange: (e) => patch(u.id, { rol: e.target.value }) },
               ['Administrador', 'Operativo'].map((r) => el('option', { value: r, selected: r === u.rol }, r)))),
-            el('td', {}, el('span', { class: 'chip ' + (u.activo ? 'ok' : 'off') }, u.activo ? 'Activo' : 'Desactivado')),
+            el('td', {}, el('span', { class: 'sello ' + (u.activo ? 'verde' : 'gris') }, u.activo ? 'Activo' : 'Desactivado')),
             el('td', {}, fmtDate(u.creado_en)),
             el('td', {}, u.id === me.id ? '' : el('button', { class: 'btn small', type: 'button', onclick: () => patch(u.id, { activo: !u.activo }) }, u.activo ? 'Desactivar' : 'Activar')))))));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/users/' + id, { method: 'PATCH', body }); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      try { await api('/users/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
       await loadTable();
     }
   }
 
   async function renderAudit(c) {
-    c.replaceChildren(el('h2', {}, 'Auditoría de accesos'), el('p', { class: 'muted' }, 'Últimos 50 eventos de seguridad.'));
+    c.replaceChildren(cabecera('auditoria', 'Últimos 50 eventos de seguridad.'));
     const box = el('div', { class: 'panel table-wrap' });
     c.append(box);
     try {
       const rows = await api('/auditoria?limit=50');
       box.replaceChildren(rows.length ? el('table', {},
-        el('thead', {}, el('tr', {}, ['Fecha', 'Usuario', 'Acción', 'IP'].map((h) => el('th', {}, h)))),
+        thead(['Fecha', 'Usuario', 'Acción', 'IP']),
         el('tbody', {}, rows.map((r) => el('tr', {},
           el('td', {}, fmtDate(r.fecha_hora)), el('td', {}, r.usuario || 'Desconocido'),
           el('td', {}, r.accion_realizada), el('td', {}, r.direccion_ip || '')))))
@@ -543,15 +696,20 @@
       container.id = 'toast-container';
       document.body.appendChild(container);
     }
-    const toast = document.createElement('div');
-    toast.className = `toast ${tipo}`;
-    toast.textContent = mensaje;
+    // Globo de manga: éxito con borde verde, error como globo de grito rojo.
+    const error = tipo === 'error';
+    const toast = el('div', { class: `toast ${tipo}`, role: error ? 'alert' : 'status' },
+      icono(error ? 'alerta' : 'ok'), el('span', {}, mensaje));
     container.appendChild(toast);
-    setTimeout(() => toast.classList.add('show'), 100);
+    if (error) bordeRugoso(toast);
+    if (anim()) {
+      gsap.fromTo(toast, { opacity: 0, scale: 0.5, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(2.2)' });
+      if (error) impacto(toast, 0.3);
+    } else toast.classList.add('show');
     setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
+      if (anim()) gsap.to(toast, { opacity: 0, y: 12, scale: 0.9, duration: 0.2, ease: 'power2.in', onComplete: () => toast.remove() });
+      else { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }
+    }, 3200);
   }
 
   // ---------- arranque: restaurar sesión ----------
