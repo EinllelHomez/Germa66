@@ -22,7 +22,19 @@ Módulo adicional en **C++** para el motor de reportes (carpeta `cpp/`).
    ```
 3. Entrar con el correo y clave que hayas puesto en `ADMIN_EMAIL` / `ADMIN_PASSWORD`.
 
-Pruebas: `npm test` (usa la base `germa66_test`, dale permisos al usuario sobre ella).
+Otros scripts:
+
+| Script | Qué hace |
+|---|---|
+| `npm run dev` | Arranca el servidor y lo reinicia al guardar cambios |
+| `npm run init-db` | Solo crea las tablas y los roles (sin usuario Administrador) |
+| `npm test` | Corre las pruebas (`test/auth.test.js`, `test/Inventario.test.js`) |
+
+Las pruebas usan la base `germa66_test`; dale permisos al usuario sobre ella:
+```sql
+CREATE DATABASE germa66_test CHARACTER SET utf8mb4;
+GRANT ALL ON germa66_test.* TO 'germa'@'localhost';
+```
 
 ## Estructura MVC del backend
 
@@ -30,10 +42,11 @@ Pruebas: `npm test` (usa la base `germa66_test`, dale permisos al usuario sobre 
 backend/src/
   config/       variables de entorno
   db/           schema.sql (todas las tablas del MVP), init.js, seed.js, pool.js
-  models/       Modelo: toda consulta SQL vive aquí (usuario, rol, auditoría)
+  models/       Modelo: toda consulta SQL vive aquí
   controllers/  Controlador: recibe la petición, llama al modelo, decide la respuesta
   routes/       una ruta por módulo, con authenticate/authorize (montadas en app.js)
   middleware/   authenticate (JWT) y authorize (RBAC)
+backend/test/   pruebas con node --test
 frontend/       Vista: index.html, styles.css, app.js
 cpp/            Motor de reportes en C++ (independiente, ver cpp/README.md)
 ```
@@ -42,70 +55,83 @@ Flujo de una petición: `routes` recibe la llamada → revisa permisos con
 `middleware/auth.js` → el `controller` decide qué hacer → le pide los datos
 al `model` correspondiente → el `model` es el único que toca la base de datos.
 
-## API disponible (Sprint 0)
+Tablas (`db/schema.sql`): `roles`, `usuarios`, `auditoria_seguridad`, `inventario`,
+`cyborgs`, `cyborg_equipamiento`, `reinos_clientes`, `pedidos`, `pedido_items`.
+
+## Roles
+
+| Rol | Acceso |
+|---|---|
+| **Administrador** | Todo: usuarios, auditoría y todos los módulos operativos |
+| **Operativo** | Inventario, cyborgs, clientes y reportes |
+
+## API disponible
+
+Todas las rutas (menos el login) requieren el header `Authorization: Bearer <token>`.
 
 | Método | Ruta | Rol |
 |---|---|---|
 | POST | /api/auth/login | público |
 | GET | /api/auth/me | autenticado |
 | POST | /api/auth/logout | autenticado |
-| GET/POST/PATCH | /api/users | Administrador |
+| GET / POST | /api/users | Administrador |
+| PATCH | /api/users/:id | Administrador |
 | GET | /api/auditoria | Administrador |
+| GET / POST | /api/inventario | Administrador, Operativo |
+| PATCH / DELETE | /api/inventario/:id | Administrador, Operativo |
+| GET / POST | /api/cyborgs | Administrador, Operativo |
+| PATCH | /api/cyborgs/:id | Administrador, Operativo |
+| GET / POST | /api/cyborgs/:id/equipamiento | Administrador, Operativo |
+| DELETE | /api/cyborgs/:id/equipamiento/:equipId | Administrador, Operativo |
+| GET / POST | /api/clientes | Administrador, Operativo |
+| PATCH | /api/clientes/:id | Administrador, Operativo |
+| GET | /api/reportes | Administrador, Operativo |
 
-## Cómo agregar un módulo (Sprint 2 y 3)
+**Pendiente:** el módulo de **Pedidos** (`/api/pedidos`). Las tablas `pedidos` y
+`pedido_items` ya existen y la ruta está comentada en `app.js`.
 
-Sigue el patrón de Usuarios, en este orden:
+## Cómo agregar un módulo
+
+Sigue el patrón de los módulos existentes (por ejemplo Inventario), en este orden:
 1. `models/<modulo>.model.js`: todas las consultas SQL de ese módulo.
 2. `controllers/<modulo>.controller.js`: usa el modelo, valida datos, decide códigos de estado.
 3. `routes/<modulo>.routes.js` con `authenticate` y `authorize(...)`.
-4. Montar la ruta en `app.js` (ya hay líneas comentadas).
-5. Reemplazar el placeholder del módulo en `frontend/app.js`.
+4. Montar la ruta en `app.js`.
+5. Agregar la vista del módulo en `frontend/app.js`.
+6. Agregar sus pruebas en `backend/test/`.
 
-Las tablas de inventario, cyborgs, reinos_clientes y pedidos ya existen en `schema.sql`.
+## Módulo C++ (motor de reportes)
 
-## Módulo C++  -- Solo se decarga el instalador de C++, Si van a editar el C++, si no lo van a tocar, no es necesario, ya que es un .exe
+Calcula el stock por categoría, los ítems bajo el mínimo y los pedidos por estado
+a partir de los CSV de `cpp/data/`. Detalles del diseño y la compilación por línea
+de comandos (`make run` o `g++`) en [`cpp/README.md`](cpp/README.md).
 
-Abrir el descargador de c++, que esta en el repositorio.
-Despues de descargar seguir estos pasos.
-1. Crear un proyecto nuevo
-En Dev-C++, ve al menú de arriba: File → New → Project...
-2
-2. Elegir tipo de proyecto
-En la ventana que aparece, selecciona el ícono 'Console Application'. Abajo, donde dice 'C' y 'C++', marca 'C++'. En el campo 'Name' escribe: reportes . Dale clic en 'OK'.
-3
-3. Guardarlo dentro de tu carpeta cpp/
-Te va a pedir dónde guardar el proyecto. Navega hasta la carpeta de tu proyecto Germa66 y guárdalo DENTRO de la carpeta cpp/ que ya tienes (por ejemplo, como 'reportes.dev'). Dale Guardar.
-4
-4. Borrar el archivo de ejemplo
-Se abre un archivo llamado main.cpp con un código de ejemplo ('Hello World') que Dev-C++ crea automáticamente. Borra TODO ese contenido de adentro (Ctrl+A para seleccionar todo, luego Suprimir) — lo vamos a reemplazar con tu main.cpp real en el siguiente paso.
-5
-5. Agregar los archivos .cpp de src/
-En el panel izquierdo ('Project'), haz clic derecho sobre 'reportes' (el nombre del proyecto) → 'Add to Project...'. Se abre un explorador de archivos: navega a tu carpeta cpp/src/ y selecciona estos 4 archivos a la vez (con Ctrl+clic): ArmamentoPesado.cpp, MotorReportes.cpp, RecursoMilitar.cpp, TrajeCombate.cpp. Dale Abrir.
-6
-6. Pegar el contenido real de main.cpp
-Ahora sí, en el archivo main.cpp que quedó vacío, tenemos que pegar el contenido real de tu cpp/src/main.cpp. Ábrelo en VS Code, copia todo su contenido (Ctrl+A, Ctrl+C), y pégalo dentro del main.cpp vacío en Dev-C++ (Ctrl+V). Guarda con Ctrl+S.
-7
-7. Indicarle dónde están los .h (include)
-Dev-C++ necesita saber dónde están los archivos .h (las carpetas 'include'). Ve a Project → Project Options → pestaña 'Directories' → sub-pestaña 'Include Directories'. Dale clic al botón con los tres puntos (...) y selecciona tu carpeta cpp/include/. Dale Add, luego OK.
-8
-8. Compilar
-Ve al menú Execute → Compile (o presiona F9). Debería decir 'Compiling succesful' sin errores rojos. Si sale algún error, mandame una captura de pantalla completa de esa ventana.
- 
+> Solo necesitas instalar Dev-C++ si vas a **editar** el código C++. Si no lo vas a
+> tocar no hace falta: ya está compilado en `cpp/Reportes.exe`.
 
+El instalador está en el repositorio (`C++ Instalador/`). Después de instalarlo:
 
+1. **Crear un proyecto nuevo.** En Dev-C++: *File → New → Project...*
+2. **Elegir el tipo de proyecto.** Selecciona *Console Application*, marca *C++* y en
+   *Name* escribe `reportes`. Clic en *OK*.
+3. **Guardarlo dentro de `cpp/`.** Navega a la carpeta del proyecto Germa66 y guárdalo
+   dentro de `cpp/` (por ejemplo como `reportes.dev`).
+4. **Borrar el archivo de ejemplo.** Dev-C++ abre un `main.cpp` con un "Hello World".
+   Borra todo su contenido (Ctrl+A, Suprimir).
+5. **Agregar los `.cpp` de `src/`.** En el panel *Project*, clic derecho sobre `reportes`
+   → *Add to Project...*, ve a `cpp/src/` y selecciona (Ctrl+clic) `ArmamentoPesado.cpp`,
+   `MotorReportes.cpp`, `RecursoMilitar.cpp` y `TrajeCombate.cpp`. Clic en *Abrir*.
+6. **Pegar el `main.cpp` real.** Abre `cpp/src/main.cpp` en VS Code, copia todo su
+   contenido y pégalo en el `main.cpp` vacío de Dev-C++. Guarda con Ctrl+S.
+7. **Indicar la carpeta de los `.h`.** *Project → Project Options → Directories →
+   Include Directories*, clic en *(...)*, selecciona `cpp/include/`, *Add* y *OK*.
+8. **Compilar.** *Execute → Compile* (F9). Debe decir *Compiling successful* sin errores.
 
-Si sale advertencias pero no errores, seguir estos paso, Si no sale nada malo, como errores o advertencias, saltar estos pasos.
+### Si salen advertencias (pero no errores)
 
+Si compiló sin errores ni advertencias, sáltate esta parte.
 
-
- 1. Abrir Project Options → Compiler
-Ve a Project → Project Options. Busca la pestaña 'Compiler' (o 'Settings', según la versión).
-2
-2. Buscar 'Language Standard'
-Dentro de esa pestaña hay una lista de opciones organizadas en categorías. Busca una que diga algo como 'Language Standard' o 'C++ Standard' (puede estar bajo 'Code Generation').
-3
-3. Elegir C++17
-En el menú desplegable de esa opción, elige 'ISO C++17 (-std=c++17)'.
-4
-4. Recompilar
-Dale OK, y luego Execute → Compile (F9) de nuevo. Ahora no debería salir ninguna advertencia.
+1. Ve a *Project → Project Options*, pestaña *Compiler* (o *Settings*, según la versión).
+2. Busca la opción *Language Standard* (puede estar bajo *Code Generation*).
+3. Elige *ISO C++17 (-std=c++17)*.
+4. Clic en *OK* y vuelve a compilar con F9. Ya no deberían salir advertencias.
