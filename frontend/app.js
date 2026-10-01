@@ -137,17 +137,37 @@
   }
 
   // ---------- vistas ----------
-  function renderHome(c) {
+  async function renderHome(c) {
     const admin = me.rol === 'Administrador';
     c.replaceChildren(
-      el('h2', {}, `Hola, ${me.nombre}`),
-      el('p', { class: 'muted' }, admin
-        ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
-        : 'Tu perfil es Operativo: registras datos y procesas solicitudes en los módulos.'),
+      el('div', { class: 'welcome-panel' },
+        el('img', { class: 'welcome-mark', src: 'assets/germa66-flag.png', alt: '', 'aria-hidden': 'true' }),
+        el('h2', {}, `Hola, ${me.nombre}`),
+        el('p', { class: 'muted' }, admin
+          ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
+          : 'Tu perfil es Operativo: registras datos y procesas solicitudes en los módulos.')),
+      el('div', { class: 'stats' }, el('p', { class: 'muted' }, 'Cargando indicadores…')),
+      el('h3', { class: 'section-heading' }, 'Módulos'),
       el('div', { class: 'grid' }, MODULES.map((m) =>
         el('article', { class: 'card', style: `--dot:${m.color}` },
           el('h3', {}, m.name), el('p', {}, m.desc),
           el('span', { class: 'chip' }, `${m.rf} · ${m.sprint}`)))));
+
+    // Panel de mando: indicadores reales sacados de tus propias APIs (no son de adorno).
+    const statsBox = c.querySelector('.stats');
+    const [inventario, cyborgs, clientes] = await Promise.all([
+      api('/inventario').catch(() => []),
+      api('/cyborgs').catch(() => []),
+      api('/clientes').catch(() => []),
+    ]);
+    const bajoMinimo = inventario.filter((i) => i.bajo_minimo).length;
+    const stat = (label, value, color) => el('article', { class: 'stat-card', style: `--dot:${color}` },
+      el('p', { class: 'stat-value' }, String(value)), el('p', { class: 'stat-label' }, label));
+    statsBox.replaceChildren(
+      stat('Ítems en inventario', inventario.length, 'var(--suit-red)'),
+      stat('Bajo el mínimo', bajoMinimo, bajoMinimo ? 'var(--danger)' : 'var(--ok)'),
+      stat('Cyborgs registrados', cyborgs.length, 'var(--suit-blue)'),
+      stat('Reinos clientes', clientes.length, 'var(--suit-yellow)'));
   }
 
   function renderPlaceholder(c, m) {
@@ -200,12 +220,12 @@
         const bajos = items.filter((it) => it.bajo_minimo).length;
         alertaBox.className = bajos ? 'msg err' : 'msg ok';
         alertaBox.textContent = bajos
-          ? `\u26a0 ${bajos} ítem(s) por debajo del mínimo (RF-06).`
+          ? `⚠ ${bajos} ítem(s) por debajo del mínimo (RF-06).`
           : 'Todo el inventario está por encima de su mínimo.';
         tableBox.replaceChildren(items.length ? el('table', {},
           el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Categoría', 'Cantidad', 'Mínimo', 'Estado', 'Ubicación', ''].map((h) => el('th', {}, h)))),
           el('tbody', {}, items.map((it) => el('tr', { class: it.bajo_minimo ? 'row-alerta' : '' },
-            el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'badge-alerta', title: 'Por debajo del mínimo (RF-06)' }, ' \u26a0 bajo mínimo') : ''),
+            el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'badge-alerta', title: 'Por debajo del mínimo (RF-06)' }, ' ⚠ bajo mínimo') : ''),
             el('td', {}, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
@@ -413,7 +433,7 @@
     await cargar();
 
     async function cargar() {
-      box.replaceChildren(el('p', { class: 'muted' }, 'Calculando\u2026'));
+      box.replaceChildren(el('p', { class: 'muted' }, 'Calculando…'));
       try {
         const r = await api('/reportes');
         const tablaConteo = (titulo, datos) => el('div', { class: 'panel' },
@@ -421,26 +441,26 @@
           Object.keys(datos).length
             ? el('table', {}, el('tbody', {}, Object.entries(datos).map(([k, v]) =>
               el('tr', {}, el('td', {}, k), el('td', {}, String(v))))))
-            : el('p', { class: 'empty' }, 'Sin datos todav\u00eda.'));
+            : el('p', { class: 'empty' }, 'Sin datos todavía.'));
 
         box.replaceChildren(
           el('div', { class: 'grid' },
             el('article', { class: 'card' }, el('h3', {}, 'Total de unidades en inventario'),
               el('p', { style: 'font-size:2rem;font-weight:700' }, String(r.totalUnidadesInventario))),
-            el('article', { class: 'card' }, el('h3', {}, '\u00cdtem m\u00e1s cr\u00edtico'),
+            el('article', { class: 'card' }, el('h3', {}, 'Ítem más crítico'),
               r.itemCritico
-                ? el('p', {}, `${r.itemCritico.nombre} (${r.itemCritico.id}): ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} m\u00ednimo`)
-                : el('p', { class: 'empty' }, 'Ning\u00fan \u00edtem est\u00e1 bajo su m\u00ednimo.'))),
-          tablaConteo('Stock por categor\u00eda', r.stockPorCategoria),
+                ? el('p', {}, `${r.itemCritico.nombre} (${r.itemCritico.id}): ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} mínimo`)
+                : el('p', { class: 'empty' }, 'Ningún ítem está bajo su mínimo.'))),
+          tablaConteo('Stock por categoría', r.stockPorCategoria),
           tablaConteo('Cyborgs por estado', r.cyborgsPorEstado),
           tablaConteo('Pedidos por estado', r.pedidosPorEstado),
           el('div', { class: 'panel table-wrap' },
-            el('h3', {}, '\u00cdtems bajo el m\u00ednimo'),
+            el('h3', {}, 'Ítems bajo el mínimo'),
             r.itemsBajoMinimo.length ? el('table', {},
-              el('thead', {}, el('tr', {}, ['C\u00f3digo', 'Nombre', 'Cantidad', 'M\u00ednimo'].map((h) => el('th', {}, h)))),
+              el('thead', {}, el('tr', {}, ['Código', 'Nombre', 'Cantidad', 'Mínimo'].map((h) => el('th', {}, h)))),
               el('tbody', {}, r.itemsBajoMinimo.map((it) => el('tr', {},
                 el('td', {}, it.id), el('td', {}, it.nombre), el('td', {}, String(it.cantidad)), el('td', {}, String(it.minimo))))))
-              : el('p', { class: 'empty' }, 'Ning\u00fan \u00edtem est\u00e1 bajo el m\u00ednimo.')));
+              : el('p', { class: 'empty' }, 'Ningún ítem está bajo el mínimo.')));
       } catch (ex) {
         box.replaceChildren(el('p', { class: 'msg err' }, ex.message),
           el('button', { class: 'btn', type: 'button', onclick: cargar }, 'Reintentar'));
