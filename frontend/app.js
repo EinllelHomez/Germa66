@@ -81,13 +81,6 @@
     if (ono) gsap.from(ono, { scale: 2.2, opacity: 0, duration: 0.35, ease: 'back.out(2)', delay: 0.3 });
   }
 
-  function trazoCircular(svg) {
-    if (!window.rough || !svg) return;
-    svg.replaceChildren();
-    const rc = rough.svg(svg);
-    svg.append(rc.circle(50, 50, 112, { stroke: token('--tinta'), strokeWidth: 2.5, roughness: 1.6 }));
-    svg.append(rc.circle(50, 50, 104, { stroke: token('--rojo'), strokeWidth: 1.5, roughness: 2.4 }));
-  }
   // Borde irregular de "globo de grito" para los errores.
   function bordeRugoso(node) {
     if (!window.rough || !node.offsetWidth) return;
@@ -99,23 +92,10 @@
     svg.append(rough.svg(svg).rectangle(3, 3, w - 6, h - 6, { stroke: token('--tinta'), strokeWidth: 2.5, roughness: 2.6, bowing: 2.5 }));
     node.prepend(svg);
   }
-  // <svg><use href="#id"></svg> de los símbolos definidos en index.html.
-  function simbolo(id, clase) {
-    const s = document.createElementNS(NS, 'svg');
-    s.setAttribute('class', clase); s.setAttribute('viewBox', '0 0 100 100'); s.setAttribute('aria-hidden', 'true');
-    const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#' + id);
-    s.append(u);
-    return s;
-  }
-  function emblema(conTrazo) {
-    const caja = el('div', { class: 'emblema', 'aria-hidden': 'true' });
-    caja.append(simbolo('emblema', 'em'));
-    if (conTrazo) {
-      const t = document.createElementNS(NS, 'svg');
-      t.setAttribute('class', 'trazo'); t.setAttribute('viewBox', '-10 -10 120 120');
-      caja.append(t); trazoCircular(t);
-    }
-    return caja;
+  // ARTE OFICIAL TEMPORAL (uso académico): bandera de Germa 66. Sustituir por arte original.
+  function emblema() {
+    return el('div', { class: 'emblema', 'aria-hidden': 'true' },
+      el('img', { class: 'em', src: 'assets/germa66-flag.png', alt: '' }));
   }
 
   // Íconos propios de trazo grueso (sin emojis).
@@ -178,7 +158,6 @@
         .from('.hermanos i', { scaleY: 0, transformOrigin: 'bottom', stagger: 0.05, duration: 0.25, ease: 'back.out(2)' }, '<');
     }
   }
-  trazoCircular($('.login-brand .trazo'));
 
   async function logout(notify = true) {
     if (notify && store.token) { try { await api('/auth/logout', { method: 'POST' }); } catch { } }
@@ -227,9 +206,7 @@
   function cabecera(id, sub) {
     const v = capitulo(id);
     const letras = [...v.name].map((ch) => el('span', { class: 'letra' }, ch === ' ' ? ' ' : ch));
-    return el('header', { class: 'cabecera marco', style: `--acento:${v.color};--acento-texto:${v.texto || 'var(--papel-claro)'}` },
-      el('div', { class: 'carta', 'aria-hidden': 'true' }),
-      simbolo('rosa-vientos', 'rosa'),
+    return el('header', { class: 'cabecera', style: `--acento:${v.color};--acento-texto:${v.texto || 'var(--papel-claro)'}` },
       el('span', { class: 'pestana' }, v.cap),
       el('h1', { class: 'titulo-modulo' }, el('span', { class: 'sr-only' }, v.name), el('span', { 'aria-hidden': 'true' }, letras)),
       el('p', { class: 'cabecera-sub' }, sub),
@@ -275,11 +252,12 @@
     const statBajos = stat('bajos', 'Bajo el mínimo', 'var(--rojo)');
     c.replaceChildren(
       el('section', { class: 'portada' },
-        el('article', { class: 'vineta bienvenida marco' },
+        el('article', { class: 'vineta bienvenida' },
           el('div', { class: 'velocidad', 'aria-hidden': 'true' }),
           el('div', { class: 'olas', 'aria-hidden': 'true' }),
           el('span', { class: 'pestana' }, 'Prólogo'),
-          emblema(true),
+          el('div', { class: 'tono', 'aria-hidden': 'true' }),
+          emblema(),
           el('p', { class: 'bienvenida-kicker' }, admin ? 'Administrador' : 'Operativo'),
           el('h1', {}, `Hola, ${me.nombre}`),
           el('p', { class: 'bienvenida-texto' }, admin
