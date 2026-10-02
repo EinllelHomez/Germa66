@@ -2,3 +2,5 @@
 *.o
 CLAUDE.md
 DESIGN.md
+.impeccable/
+.claude/

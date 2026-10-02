@@ -7,33 +7,54 @@
   };
   let me = null;
 
+  // ARTE OFICIAL TEMPORAL (uso académico): personajes del anime. Sustituir por arte original.
+  // Sanji (Reinos clientes) aún no tiene imagen: su cartel usa la bandera.
+  // Versiones optimizadas en assets/optim/ (originales en assets/). w/h evitan saltos al cargar.
+  const ARTE = {
+    ichiji: { src: 'assets/optim/ichiji.webp', w: 613, h: 1000 },  // más grande: es el cartel destacado
+    niji: { src: 'assets/optim/niji.webp', w: 600, h: 600 },
+    yonji: { src: 'assets/optim/yonji.webp', w: 645, h: 600 },
+    reiju: { src: 'assets/optim/reiju.webp', w: 256, h: 600 },
+    judge: { src: 'assets/optim/judge.webp', w: 480, h: 600 },
+    bandera: { src: 'assets/optim/bandera.webp', w: 160, h: 163 },
+  };
+  // <img> decorativo de un arte del mapa ARTE.
+  const imgArte = (a, props = {}) =>
+    el('img', { src: a.src, width: a.w, height: a.h, alt: '', decoding: 'async', ...props });
+
   // Módulos del sistema. "sprint" indica cuándo se construye (SRS / plan Scrum).
-  // Cada capítulo lleva el color de un hermano Vinsmoke (ver DESIGN.md).
+  // Cada capítulo lleva el color y el cartel de un hermano Vinsmoke (ver DESIGN.md).
+  // "alias" es el papel del módulo en el negocio de Germa: armamento, cyborgs y contrabando.
   const MODULES = [
     {
-      id: 'inventario', name: 'Inventario', color: 'var(--rojo)', onomato: 'ガシャン!', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
-      desc: 'Stock de armamento y Raid Suits: código, categoría, cantidad, estado y ubicación.'
+      id: 'inventario', name: 'Inventario', alias: 'Arsenal', hermano: 'Vinsmoke Ichiji', arte: ARTE.ichiji,
+      color: 'var(--rojo)', onomato: 'ガシャン!', rf: 'RF-02', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      desc: 'Armamento, Raid Suits y artefactos listos para la venta: cantidad, estado y ubicación.'
     },
     {
-      id: 'cyborgs', name: 'Cyborgs', color: 'var(--azul-mar)', onomato: 'ビリビリ!', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
-      desc: 'Ficha de cada unidad y asignación de equipamiento con stock disponible.'
+      id: 'cyborgs', name: 'Cyborgs', alias: 'Ejército de clones', hermano: 'Vinsmoke Niji', arte: ARTE.niji,
+      color: 'var(--azul-mar)', onomato: 'ビリビリ!', rf: 'RF-03', sprint: 'Sprint 2 (30 sep al 19 oct)', ready: true,
+      desc: 'Ficha de cada soldado clon y el equipamiento que lleva asignado.'
     },
     {
-      id: 'clientes', name: 'Reinos clientes', color: 'var(--dorado)', texto: 'var(--tinta)', onomato: 'ドン!', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
-      desc: 'Directorio de reinos, contacto, ubicación y estado de cuenta.'
+      id: 'clientes', name: 'Reinos clientes', alias: 'Compradores', hermano: 'Vinsmoke Sanji', arte: null,
+      color: 'var(--dorado)', texto: 'var(--tinta)', onomato: 'ドン!', rf: 'RF-04', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      desc: 'Reinos que compran armas y tropas a Germa: contacto, ubicación y estado de cuenta.'
     },
     {
-      id: 'pedidos', name: 'Pedidos', color: 'var(--verde)', onomato: 'ザッ!', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
-      desc: 'Solicitudes de recursos; descuenta o reserva stock al confirmar.'
+      id: 'pedidos', name: 'Pedidos', alias: 'Contrabando', hermano: 'Vinsmoke Yonji', arte: ARTE.yonji,
+      color: 'var(--verde)', onomato: 'ザッ!', rf: 'RF-05', sprint: 'Sprint 3 (20 oct al 8 nov)',
+      desc: 'Encargos de armamento y tropas; descuentan o reservan stock al confirmar.'
     },
     {
-      id: 'reportes', name: 'Reportes', color: 'var(--rosa)', onomato: 'ジャーン!', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
-      desc: 'Indicadores de stock, cyborgs y pedidos, calculados por el motor en C++.'
+      id: 'reportes', name: 'Reportes', alias: 'Inteligencia', hermano: 'Vinsmoke Reiju', arte: ARTE.reiju,
+      color: 'var(--rosa)', onomato: 'ジャーン!', rf: 'RF-06', sprint: 'Sprint 3 (20 oct al 8 nov)', ready: true,
+      desc: 'Balance del negocio: stock, tropas y encargos, calculados por el motor en C++.'
     },
   ];
   const ADMIN_VIEWS = [
-    { id: 'usuarios', name: 'Usuarios y roles', color: 'var(--tinta-suave)', onomato: 'コン!' },
-    { id: 'auditoria', name: 'Auditoría de accesos', color: 'var(--tinta-suave)', onomato: 'ギロッ' },
+    { id: 'usuarios', name: 'Usuarios y roles', arte: ARTE.judge, color: 'var(--tinta-suave)', onomato: 'コン!' },
+    { id: 'auditoria', name: 'Auditoría de accesos', arte: ARTE.judge, color: 'var(--tinta-suave)', onomato: 'ギロッ' },
   ];
   const INICIO = { id: 'inicio', name: 'Inicio', color: 'var(--papel-claro)', texto: 'var(--tinta)', sombra: 'var(--rojo)' };
   // Índice de capítulos: Inicio es el prólogo; el resto se numera en orden.
@@ -71,7 +92,7 @@
   }
   function animarVista(c) {
     if (!anim()) return;
-    entrada(c.querySelectorAll(':scope > :not(.portada), .portada > *'));
+    entrada(c.querySelectorAll(':scope > :not(.portada):not(.carteles), .portada > *, .carteles > li'));
     const letras = c.querySelectorAll('.titulo-modulo .letra');
     if (letras.length) gsap.from(letras, {
       yPercent: -80, rotation: () => gsap.utils.random(-25, 25), opacity: 0,
@@ -91,11 +112,6 @@
     svg.setAttribute('aria-hidden', 'true');
     svg.append(rough.svg(svg).rectangle(3, 3, w - 6, h - 6, { stroke: token('--tinta'), strokeWidth: 2.5, roughness: 2.6, bowing: 2.5 }));
     node.prepend(svg);
-  }
-  // ARTE OFICIAL TEMPORAL (uso académico): bandera de Germa 66. Sustituir por arte original.
-  function emblema() {
-    return el('div', { class: 'emblema', 'aria-hidden': 'true' },
-      el('img', { class: 'em', src: 'assets/germa66-flag.png', alt: '' }));
   }
 
   // Íconos propios de trazo grueso (sin emojis).
@@ -206,8 +222,10 @@
   function cabecera(id, sub) {
     const v = capitulo(id);
     const letras = [...v.name].map((ch) => el('span', { class: 'letra' }, ch === ' ' ? ' ' : ch));
-    return el('header', { class: 'cabecera', style: `--acento:${v.color};--acento-texto:${v.texto || 'var(--papel-claro)'}` },
-      el('span', { class: 'pestana' }, v.cap),
+    return el('header', { class: 'cabecera' + (v.arte ? ' con-personaje' : ''), style: `--acento:${v.color};--acento-texto:${v.texto || 'var(--papel-claro)'}` },
+      el('span', { class: 'pestana' }, v.alias ? `${v.cap} · ${v.alias}` : v.cap),
+      // El personaje del capítulo "rompe" la viñeta por arriba, como en el manga.
+      v.arte ? imgArte(v.arte, { class: 'cabecera-personaje', 'aria-hidden': 'true' }) : null,
       el('h1', { class: 'titulo-modulo' }, el('span', { class: 'sr-only' }, v.name), el('span', { 'aria-hidden': 'true' }, letras)),
       el('p', { class: 'cabecera-sub' }, sub),
       el('span', { class: 'onomato', 'aria-hidden': 'true' }, v.onomato || 'ドン!'));
@@ -242,12 +260,13 @@
   async function renderHome(c) {
     const admin = me.rol === 'Administrador';
     // Portada: una viñeta principal grande y cuatro indicadores pequeños alrededor.
-    const valores = {};
+    const valores = {}, notas = {};
     const stat = (key, label, color) => {
       valores[key] = el('p', { class: 'stat-valor' }, '…');
+      notas[key] = el('p', { class: 'stat-nota' });
       return el('article', { class: 'vineta stat' },
         el('span', { class: 'pestana' }, el('span', { class: 'cap-mini', style: `--cap-color:${color}` }), label),
-        valores[key]);
+        valores[key], notas[key]);
     };
     const statBajos = stat('bajos', 'Bajo el mínimo', 'var(--rojo)');
     c.replaceChildren(
@@ -257,8 +276,8 @@
           el('div', { class: 'olas', 'aria-hidden': 'true' }),
           el('span', { class: 'pestana' }, 'Prólogo'),
           el('div', { class: 'tono', 'aria-hidden': 'true' }),
-          emblema(),
-          el('p', { class: 'bienvenida-kicker' }, admin ? 'Administrador' : 'Operativo'),
+          imgArte(ARTE.judge, { class: 'bienvenida-personaje', 'aria-hidden': 'true' }),
+          el('p', { class: 'bienvenida-kicker' }, admin ? 'Administrador · Mando del reino' : 'Operativo · Tropa del reino'),
           el('h1', {}, `Hola, ${me.nombre}`),
           el('p', { class: 'bienvenida-texto' }, admin
             ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
@@ -267,15 +286,24 @@
         statBajos,
         stat('cyborgs', 'Cyborgs registrados', 'var(--azul-mar)'),
         stat('clientes', 'Reinos clientes', 'var(--dorado)')),
-      el('h2', { class: 'titulo-seccion' }, 'Índice de capítulos'),
-      el('ol', { class: 'indice' }, MODULES.map((m) => {
+      el('h2', { class: 'titulo-seccion' }, 'Carteles de los capítulos'),
+      // Tablón de carteles de "SE BUSCA": un cartel por capítulo, con su hermano Vinsmoke.
+      el('ol', { class: 'carteles' }, MODULES.map((m) => {
         const v = capitulo(m.id);
-        return el('li', {}, el('button', { type: 'button', style: capVars(v), onclick: () => go(m.id) },
-          el('span', { class: 'cap' }, v.cap),
-          el('span', {}, el('span', { class: 'indice-nombre' }, m.name), el('span', { class: 'indice-desc' }, m.desc)),
-          el('span', { class: 'indice-meta' },
-            el('span', { class: 'sello ' + (m.ready ? 'verde' : 'dorado') }, m.ready ? 'En servicio' : 'Próximo'),
-            `${m.rf} · ${m.sprint}`)));
+        // El Arsenal es la actividad principal de Germa: su cartel es el destacado.
+        return el('li', m.id === 'inventario' ? { class: 'destacado' } : {},
+          el('button', { type: 'button', class: 'cartel', style: capVars(v), onclick: () => go(m.id) },
+          el('span', { class: 'cartel-cabeza', 'aria-hidden': 'true' }, 'Se busca'),
+          el('span', { class: 'cartel-foto' + (m.arte ? '' : ' sin-foto'), 'aria-hidden': 'true' },
+            imgArte(m.arte || ARTE.bandera, { loading: 'lazy' })),
+          el('span', { class: 'cartel-vivo', 'aria-hidden': 'true' }, 'Vivo o muerto'),
+          el('span', { class: 'cartel-nombre' }, m.name),
+          el('span', { class: 'cartel-alias' }, `${m.alias} · ${m.hermano}`),
+          el('span', { class: 'cartel-desc' }, m.desc),
+          el('span', { class: 'cartel-pie' },
+            el('span', { class: 'cap' }, v.cap),
+            el('span', { class: 'sello ' + (m.ready ? 'verde' : 'dorado') }, m.ready ? 'En servicio' : 'Próximo')),
+          el('span', { class: 'cartel-rf' }, `${m.rf} · ${m.sprint}`)));
       })));
 
     // Panel de mando: indicadores reales sacados de tus propias APIs (no son de adorno).
@@ -289,6 +317,14 @@
     valores.bajos.textContent = bajoMinimo;
     valores.cyborgs.textContent = cyborgs.length;
     valores.clientes.textContent = clientes.length;
+    // Notas con datos reales, para que cada cifra diga algo del negocio.
+    const unidades = inventario.reduce((t, i) => t + (Number(i.cantidad) || 0), 0);
+    const activos = cyborgs.filter((cy) => cy.estado === 'activo').length;
+    const enMora = clientes.filter((cl) => cl.estado_cuenta === 'en_mora').length;
+    notas.items.textContent = `${unidades} unidades en el arsenal`;
+    notas.bajos.textContent = bajoMinimo ? 'Requieren reposición' : 'Todo el arsenal en orden';
+    notas.cyborgs.textContent = `${activos} en servicio activo`;
+    notas.clientes.textContent = enMora ? `${enMora} con pagos atrasados` : 'Todos al día';
     if (bajoMinimo) { statBajos.classList.add('alerta'); impacto(statBajos, 0.5); }
   }
 
@@ -304,11 +340,11 @@
   const INV_ESTADOS = ['disponible', 'en_mantenimiento', 'agotado', 'baja'];
 
   async function renderInventario(c) {
-    c.replaceChildren(cabecera('inventario', 'Stock de armamento, Raid Suits y artefactos (RF-02).'));
+    c.replaceChildren(cabecera('inventario', 'El arsenal de Germa: armamento, Raid Suits y artefactos para la venta (RF-02).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
-      el('h3', {}, 'Nuevo ítem'),
+      el('h2', {}, 'Nuevo ítem'),
       el('div', { class: 'form-row' },
         field('Código', el('input', { name: 'codigo', required: true })),
         field('Nombre', el('input', { name: 'nombre', required: true })),
@@ -353,11 +389,11 @@
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
               INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
             el('td', { class: 'num' }, el('input', {
-              type: 'number', min: 0, value: it.cantidad, style: 'width:5.5rem',
+              type: 'number', min: 0, value: it.cantidad, style: 'width:4.6rem',
               'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value })
             })),
             el('td', { class: 'num' }, el('input', {
-              type: 'number', min: 0, value: it.minimo, style: 'width:5.5rem',
+              type: 'number', min: 0, value: it.minimo, style: 'width:4.6rem',
               'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value })
             })),
             el('td', {}, selectEstado(it.estado,
@@ -388,11 +424,11 @@
   const CYB_ESTADOS = ['activo', 'en_mantenimiento', 'baja'];
 
   async function renderCyborgs(c) {
-    c.replaceChildren(cabecera('cyborgs', 'Registro de unidades y asignación de equipamiento (RF-03).'));
+    c.replaceChildren(cabecera('cyborgs', 'El ejército de clones del reino y el equipamiento asignado a cada soldado (RF-03).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
-      el('h3', {}, 'Nuevo cyborg'),
+      el('h2', {}, 'Nuevo cyborg'),
       el('div', { class: 'form-row' },
         field('Código', el('input', { name: 'codigo', required: true })),
         field('Serie', el('input', { name: 'serie', required: true })),
@@ -444,7 +480,7 @@
       const inventario = await api('/inventario').catch(() => []);
 
       const asignarForm = el('form', { class: 'panel', novalidate: true },
-        el('h3', {}, `Asignar equipamiento a ${cyborg.codigo}`),
+        el('h2', {}, `Asignar equipamiento a ${cyborg.codigo}`),
         el('div', { class: 'form-row' },
           field('Ítem', el('select', { name: 'itemId', required: true },
             inventario.map((it) => el('option', { value: it.id }, `${it.codigo} — ${it.nombre} (disp: ${it.cantidad})`)))),
@@ -497,11 +533,11 @@
   const CLI_ESTADOS = ['al_dia', 'en_mora', 'suspendida'];
 
   async function renderClientes(c) {
-    c.replaceChildren(cabecera('clientes', 'Directorio de reinos y su estado de cuenta (RF-04).'));
+    c.replaceChildren(cabecera('clientes', 'Reinos que compran armas y tropas a Germa, y su estado de cuenta (RF-04).'));
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
-      el('h3', {}, 'Nuevo reino cliente'),
+      el('h2', {}, 'Nuevo reino cliente'),
       el('div', { class: 'form-row' },
         field('Nombre del reino', el('input', { name: 'nombre', required: true })),
         field('Contacto', el('input', { name: 'contacto' })),
@@ -554,7 +590,7 @@
   }
 
   async function renderReportes(c) {
-    c.replaceChildren(cabecera('reportes', 'Indicadores calculados por el motor en C++ a partir de tus datos reales (RF-06).'));
+    c.replaceChildren(cabecera('reportes', 'Inteligencia del negocio, calculada por el motor en C++ con tus datos reales (RF-06).'));
     const box = el('div');
     c.append(box);
     await cargar();
@@ -564,16 +600,16 @@
       try {
         const r = await api('/reportes');
         const tablaConteo = (titulo, grupo, datos) => el('div', { class: 'panel table-wrap' },
-          el('h3', {}, titulo),
+          el('h2', {}, titulo),
           Object.keys(datos).length
             ? el('table', {}, thead([grupo, ['Total', 'num']]), el('tbody', {}, Object.entries(datos).map(([k, v]) =>
               el('tr', {}, el('td', {}, k), el('td', { class: 'num' }, String(v))))))
             : el('p', { class: 'empty' }, 'Sin datos todavía.'));
 
         const mosaico = el('div', { class: 'mosaico' },
-          el('article', { class: 'panel destacada' }, el('h3', {}, 'Total de unidades en inventario'),
+          el('article', { class: 'panel destacada' }, el('h2', {}, 'Total de unidades en inventario'),
             el('p', { class: 'cifra' }, String(r.totalUnidadesInventario))),
-          el('article', { class: 'panel' + (r.itemCritico ? ' alerta' : '') }, el('h3', {}, 'Ítem más crítico'),
+          el('article', { class: 'panel' + (r.itemCritico ? ' alerta' : '') }, el('h2', {}, 'Ítem más crítico'),
             r.itemCritico
               ? [el('p', { class: 'critico-nombre' }, r.itemCritico.nombre),
                 el('p', {}, `${r.itemCritico.id}: ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} mínimo`),
@@ -583,7 +619,7 @@
           tablaConteo('Cyborgs por estado', 'Estado', r.cyborgsPorEstado),
           tablaConteo('Pedidos por estado', 'Estado', r.pedidosPorEstado),
           el('div', { class: 'panel table-wrap ancha' },
-            el('h3', {}, 'Ítems bajo el mínimo'),
+            el('h2', {}, 'Ítems bajo el mínimo'),
             r.itemsBajoMinimo.length ? el('table', {},
               thead(['Código', 'Nombre', ['Cantidad', 'num'], ['Mínimo', 'num']]),
               el('tbody', {}, r.itemsBajoMinimo.map((it) => el('tr', {},
@@ -603,7 +639,7 @@
     const msg = el('p', { class: 'msg', role: 'status' });
 
     const form = el('form', { class: 'panel', novalidate: true },
-      el('h3', {}, 'Nuevo usuario'),
+      el('h2', {}, 'Nuevo usuario'),
       el('div', { class: 'form-row' },
         field('Nombre', el('input', { name: 'nombre', required: true })),
         field('Correo', el('input', { name: 'email', type: 'email', required: true })),
@@ -689,6 +725,20 @@
       else { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }
     }, 3200);
   }
+
+  // Tablas de 4+ columnas: en móvil se apilan como fichas, y cada celda lleva el nombre
+  // de su columna (data-label). Se aplica a toda tabla que entre en #content.
+  function etiquetarTablas(raiz) {
+    raiz.querySelectorAll('table:not([data-etiquetada])').forEach((t) => {
+      t.dataset.etiquetada = '';
+      const cols = [...t.querySelectorAll('thead th')].map((th) => th.textContent.trim());
+      if (cols.length < 4) return;
+      t.classList.add('apilable');
+      t.querySelectorAll('tbody tr').forEach((tr) =>
+        [...tr.children].forEach((td, i) => td.setAttribute('data-label', cols[i] || '')));
+    });
+  }
+  new MutationObserver(() => etiquetarTablas($('#content'))).observe($('#content'), { childList: true, subtree: true });
 
   // ---------- arranque: restaurar sesión ----------
   (async () => {
