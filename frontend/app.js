@@ -71,6 +71,15 @@
     agotado: 'rojo',
     baja: 'gris', suspendida: 'gris', cancelado: 'gris',
   };
+  // Nombres legibles de los valores internos de la base de datos (la API sigue recibiendo el valor).
+  const ETIQUETA = {
+    arma: 'Arma', raid_suit: 'Raid Suit', artefacto: 'Artefacto',
+    disponible: 'Disponible', en_mantenimiento: 'En mantenimiento', agotado: 'Agotado', baja: 'Baja',
+    activo: 'Activo', al_dia: 'Al día', en_mora: 'En mora', suspendida: 'Suspendida',
+    pendiente: 'Pendiente', confirmado: 'Confirmado', en_preparacion: 'En preparación', entregado: 'Entregado', cancelado: 'Cancelado',
+  };
+  const etiqueta = (v) => ETIQUETA[v] || v;
+  const fmtNum = (n) => Number(n).toLocaleString('es-CO');
 
   // ---------- movimiento (GSAP) y trazos (Rough.js); todo es opcional si la CDN falla ----------
   const reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,7 +89,8 @@
 
   function entrada(nodes) {
     if (!anim() || !nodes.length) return;
-    gsap.from(nodes, { opacity: 0, y: 16, scale: 0.96, duration: 0.45, ease: 'back.out(1.6)', stagger: 0.08, clearProps: 'opacity,transform' });
+    // El escalonado se detiene en el 6.º elemento: con muchas viñetas la entrada no pasa de ~0.85s.
+    gsap.from(nodes, { opacity: 0, y: 16, scale: 0.96, duration: 0.45, ease: 'back.out(1.6)', stagger: (i) => Math.min(i, 5) * 0.08, clearProps: 'opacity,transform' });
   }
   // Sacudida de impacto: 4 golpes de ±4px en 0.25s.
   function impacto(node, delay = 0) {
@@ -96,7 +106,7 @@
     const letras = c.querySelectorAll('.titulo-modulo .letra');
     if (letras.length) gsap.from(letras, {
       yPercent: -80, rotation: () => gsap.utils.random(-25, 25), opacity: 0,
-      duration: 0.4, ease: 'back.out(2.2)', stagger: 0.035, delay: 0.1, clearProps: 'all',
+      duration: 0.3, ease: 'back.out(2.2)', stagger: { amount: 0.25 }, delay: 0.1, clearProps: 'all',
     });
     const ono = c.querySelector('.cabecera .onomato');
     if (ono) gsap.from(ono, { scale: 2.2, opacity: 0, duration: 0.35, ease: 'back.out(2)', delay: 0.3 });
@@ -149,7 +159,10 @@
     return data;
   }
 
-  const fmtDate = (s) => new Date(s).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+  const fmtDate = (s) => {
+    const d = new Date(s);
+    return isNaN(d) ? '—' : d.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+  };
 
   // ---------- sesión ----------
   async function showApp() {
@@ -236,7 +249,25 @@
   const selectEstado = (estado, props, opciones) =>
     el('span', { class: 'estado', 'data-tono': TONO[estado] || 'gris' },
       el('span', { class: 'punto', 'aria-hidden': 'true' }),
-      el('select', props, opciones.map((v) => el('option', { value: v, selected: v === estado }, v))));
+      el('select', props, opciones.map((v) => el('option', { value: v, selected: v === estado }, etiqueta(v)))));
+  // Campo numérico de tabla: toda la columna toma el ancho de su cifra más larga, para que ninguna
+  // se vea recortada y la columna quede alineada; si al escribir la cifra crece, el campo crece.
+  const anchoNum = (digitos) => `width:${Math.max(digitos, 3) + 4}ch`;
+  const digitosMax = (valores) => Math.max(...valores.map((v) => String(v ?? '').length));
+  const inputNum = (valor, digitos, props) => el('input', {
+    type: 'number', min: 0, value: valor, style: anchoNum(digitos),
+    oninput: (e) => { e.target.style.cssText = anchoNum(Math.max(digitos, e.target.value.length)); }, ...props,
+  });
+  // Tras editar una fila la tabla se recarga: el foco vuelve al mismo control y solo esa fila se sacude.
+  async function recargarFila(box, cargar, id, ok) {
+    // Con Tab, el cambio se guarda antes de que el foco llegue al siguiente campo: se espera un turno.
+    await new Promise((r) => setTimeout(r));
+    const foco = document.activeElement?.getAttribute('aria-label');
+    await cargar();
+    const fila = box.querySelector(`tr[data-id="${id}"]`);
+    if (foco) fila?.querySelector(`[aria-label="${CSS.escape(foco)}"]`)?.focus();
+    if (ok) impacto(fila || box);
+  }
 
   function go(view) {
     document.querySelectorAll('.nav button').forEach((b) => {
@@ -257,6 +288,7 @@
   }
 
   // ---------- vistas ----------
+  let avisoBajosMostrado = false;
   async function renderHome(c) {
     const admin = me.rol === 'Administrador';
     // Portada: una viñeta principal grande y cuatro indicadores pequeños alrededor.
@@ -278,7 +310,8 @@
           el('div', { class: 'tono', 'aria-hidden': 'true' }),
           imgArte(ARTE.judge, { class: 'bienvenida-personaje', 'aria-hidden': 'true' }),
           el('p', { class: 'bienvenida-kicker' }, admin ? 'Administrador · Mando del reino' : 'Operativo · Tropa del reino'),
-          el('h1', {}, `Hola, ${me.nombre}`),
+          // Un nombre largo baja de tamaño para no estirar la bienvenida.
+          el('h1', me.nombre.length > 22 ? { class: 'nombre-largo' } : {}, `Hola, ${me.nombre}`),
           el('p', { class: 'bienvenida-texto' }, admin
             ? 'Tienes acceso total: administras usuarios, roles y la auditoría, además de todos los módulos.'
             : 'Tu perfil es Operativo: registras datos y procesas solicitudes en los módulos.')),
@@ -313,19 +346,23 @@
       api('/clientes').catch(() => []),
     ]);
     const bajoMinimo = inventario.filter((i) => i.bajo_minimo).length;
-    valores.items.textContent = inventario.length;
-    valores.bajos.textContent = bajoMinimo;
-    valores.cyborgs.textContent = cyborgs.length;
-    valores.clientes.textContent = clientes.length;
+    valores.items.textContent = fmtNum(inventario.length);
+    valores.bajos.textContent = fmtNum(bajoMinimo);
+    valores.cyborgs.textContent = fmtNum(cyborgs.length);
+    valores.clientes.textContent = fmtNum(clientes.length);
     // Notas con datos reales, para que cada cifra diga algo del negocio.
     const unidades = inventario.reduce((t, i) => t + (Number(i.cantidad) || 0), 0);
     const activos = cyborgs.filter((cy) => cy.estado === 'activo').length;
     const enMora = clientes.filter((cl) => cl.estado_cuenta === 'en_mora').length;
-    notas.items.textContent = `${unidades} unidades en el arsenal`;
+    notas.items.textContent = `${fmtNum(unidades)} ${unidades === 1 ? 'unidad' : 'unidades'} en el arsenal`;
     notas.bajos.textContent = bajoMinimo ? 'Requieren reposición' : 'Todo el arsenal en orden';
     notas.cyborgs.textContent = `${activos} en servicio activo`;
     notas.clientes.textContent = enMora ? `${enMora} con pagos atrasados` : 'Todos al día';
-    if (bajoMinimo) { statBajos.classList.add('alerta'); impacto(statBajos, 0.5); }
+    if (bajoMinimo) {
+      statBajos.classList.add('alerta');
+      // La sacudida de aviso sale una vez por sesión, no en cada visita a Inicio.
+      if (!avisoBajosMostrado) { avisoBajosMostrado = true; impacto(statBajos, 0.5); }
+    }
   }
 
   function renderPlaceholder(c, m) {
@@ -348,7 +385,7 @@
       el('div', { class: 'form-row' },
         field('Código', el('input', { name: 'codigo', required: true })),
         field('Nombre', el('input', { name: 'nombre', required: true })),
-        field('Categoría', el('select', { name: 'categoria' }, INV_CATEGORIAS.map((v) => el('option', { value: v }, v)))),
+        field('Categoría', el('select', { name: 'categoria' }, INV_CATEGORIAS.map((v) => el('option', { value: v }, etiqueta(v))))),
         field('Cantidad', el('input', { name: 'cantidad', type: 'number', min: 0, required: true, value: 0 })),
         field('Mínimo', el('input', { name: 'minimo', type: 'number', min: 0, required: true, value: 5 })),
         field('Ubicación', el('input', { name: 'ubicacion' })),
@@ -377,25 +414,22 @@
       try {
         const items = await api('/inventario');
         const bajos = items.filter((it) => it.bajo_minimo).length;
+        const digitos = { cantidad: digitosMax(items.map((it) => it.cantidad)), minimo: digitosMax(items.map((it) => it.minimo)) };
         alertaBox.className = bajos ? 'msg err' : 'msg ok';
         alertaBox.replaceChildren(icono(bajos ? 'alerta' : 'ok'), bajos
           ? `${bajos} ítem(s) por debajo del mínimo (RF-06).`
           : 'Todo el inventario está por encima de su mínimo.');
         tableBox.replaceChildren(items.length ? el('table', {},
           thead(['Código', 'Nombre', 'Categoría', ['Cantidad', 'num'], ['Mínimo', 'num'], 'Estado', 'Ubicación', '']),
-          el('tbody', {}, items.map((it) => el('tr', { class: it.bajo_minimo ? 'row-alerta' : '' },
+          el('tbody', {}, items.map((it) => el('tr', { 'data-id': it.id, class: it.bajo_minimo ? 'row-alerta' : '' },
             el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'sello rojo', title: 'Por debajo del mínimo (RF-06)' }, 'Bajo mínimo') : ''),
-            el('td', {}, it.nombre),
+            el('td', { class: 'col-nombre' }, it.nombre),
             el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
-              INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, v)))),
-            el('td', { class: 'num' }, el('input', {
-              type: 'number', min: 0, value: it.cantidad, style: 'width:4.6rem',
-              'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value })
-            })),
-            el('td', { class: 'num' }, el('input', {
-              type: 'number', min: 0, value: it.minimo, style: 'width:4.6rem',
-              'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value })
-            })),
+              INV_CATEGORIAS.map((v) => el('option', { value: v, selected: v === it.categoria }, etiqueta(v))))),
+            el('td', { class: 'num' }, inputNum(it.cantidad, digitos.cantidad,
+              { 'aria-label': `Cantidad de ${it.codigo}`, onchange: (e) => patch(it.id, { cantidad: e.target.value }) })),
+            el('td', { class: 'num' }, inputNum(it.minimo, digitos.minimo,
+              { 'aria-label': `Mínimo de ${it.codigo}`, onchange: (e) => patch(it.id, { minimo: e.target.value }) })),
             el('td', {}, selectEstado(it.estado,
               { 'aria-label': `Estado de ${it.codigo}`, onchange: (e) => patch(it.id, { estado: e.target.value }) }, INV_ESTADOS)),
             el('td', {}, it.ubicacion || ''),
@@ -404,9 +438,10 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/inventario/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      let ok = false;
+      try { await api('/inventario/' + id, { method: 'PATCH', body }); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
-      await loadTable();
+      await recargarFila(tableBox, loadTable, id, ok);
     }
     async function remove(id, codigo) {
       if (!confirm(`¿Eliminar el ítem ${codigo} del inventario?`)) return;
@@ -459,19 +494,20 @@
         const cyborgs = await api('/cyborgs');
         tableBox.replaceChildren(cyborgs.length ? el('table', {},
           thead(['Código', 'Serie', 'Nombre', 'Estado', ['Ítems asignados', 'num'], '']),
-          el('tbody', {}, cyborgs.map((cy) => el('tr', {},
+          el('tbody', {}, cyborgs.map((cy) => el('tr', { 'data-id': cy.id },
             el('td', {}, cy.codigo), el('td', {}, cy.serie), el('td', {}, cy.nombre || ''),
             el('td', {}, selectEstado(cy.estado,
               { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patchEstado(cy.id, e.target.value) }, CYB_ESTADOS)),
-            el('td', { class: 'num' }, String(cy.items_asignados)),
+            el('td', { class: 'num' }, fmtNum(cy.items_asignados)),
             el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => renderEquipo(cy) }, 'Equipamiento'))))))
           : el('p', { class: 'empty' }, 'Aún no hay cyborgs registrados.'));
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patchEstado(id, estado) {
-      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      let ok = false;
+      try { await api('/cyborgs/' + id, { method: 'PATCH', body: { estado } }); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
-      await loadTable();
+      await recargarFila(tableBox, loadTable, id, ok);
     }
 
     // Panel de equipamiento de un cyborg concreto: se abre al pulsar "Equipamiento" en la tabla.
@@ -512,7 +548,7 @@
           equipoTableBox.replaceChildren(items.length ? el('table', {},
             thead(['Código', 'Nombre', ['Cantidad', 'num'], '']),
             el('tbody', {}, items.map((it) => el('tr', {},
-              el('td', {}, it.item_codigo), el('td', {}, it.item_nombre), el('td', { class: 'num' }, String(it.cantidad)),
+              el('td', {}, it.item_codigo), el('td', {}, it.item_nombre), el('td', { class: 'num' }, fmtNum(it.cantidad)),
               el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => quitar(it.id) }, 'Quitar'))))))
             : el('p', { class: 'empty' }, 'Este cyborg no tiene equipamiento asignado.'));
         } catch (ex) { equipoTableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
@@ -567,14 +603,14 @@
         const clientes = await api('/clientes');
         tableBox.replaceChildren(clientes.length ? el('table', {},
           thead(['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta']),
-          el('tbody', {}, clientes.map((cl) => el('tr', {},
+          el('tbody', {}, clientes.map((cl) => el('tr', { 'data-id': cl.id },
             el('td', {}, cl.nombre),
             el('td', {}, el('input', {
-              value: cl.contacto || '', 'aria-label': `Contacto de ${cl.nombre}`,
+              value: cl.contacto || '', title: cl.contacto || '', 'aria-label': `Contacto de ${cl.nombre}`,
               onchange: (e) => patch(cl.id, { contacto: e.target.value })
             })),
             el('td', {}, el('input', {
-              value: cl.ubicacion || '', 'aria-label': `Ubicación de ${cl.nombre}`,
+              value: cl.ubicacion || '', title: cl.ubicacion || '', 'aria-label': `Ubicación de ${cl.nombre}`,
               onchange: (e) => patch(cl.id, { ubicacion: e.target.value })
             })),
             el('td', {}, selectEstado(cl.estado_cuenta,
@@ -583,9 +619,10 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/clientes/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      let ok = false;
+      try { await api('/clientes/' + id, { method: 'PATCH', body }); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
-      await loadTable();
+      await recargarFila(tableBox, loadTable, id, ok);
     }
   }
 
@@ -603,16 +640,16 @@
           el('h2', {}, titulo),
           Object.keys(datos).length
             ? el('table', {}, thead([grupo, ['Total', 'num']]), el('tbody', {}, Object.entries(datos).map(([k, v]) =>
-              el('tr', {}, el('td', {}, k), el('td', { class: 'num' }, String(v))))))
+              el('tr', {}, el('td', {}, etiqueta(k)), el('td', { class: 'num' }, fmtNum(v))))))
             : el('p', { class: 'empty' }, 'Sin datos todavía.'));
 
         const mosaico = el('div', { class: 'mosaico' },
           el('article', { class: 'panel destacada' }, el('h2', {}, 'Total de unidades en inventario'),
-            el('p', { class: 'cifra' }, String(r.totalUnidadesInventario))),
+            el('p', { class: 'cifra' }, fmtNum(r.totalUnidadesInventario))),
           el('article', { class: 'panel' + (r.itemCritico ? ' alerta' : '') }, el('h2', {}, 'Ítem más crítico'),
             r.itemCritico
-              ? [el('p', { class: 'critico-nombre' }, r.itemCritico.nombre),
-                el('p', {}, `${r.itemCritico.id}: ${r.itemCritico.cantidad} de ${r.itemCritico.minimo} mínimo`),
+              ? [el('p', { class: 'critico-nombre', title: r.itemCritico.nombre }, r.itemCritico.nombre),
+                el('p', {}, `${r.itemCritico.id}: ${fmtNum(r.itemCritico.cantidad)} de ${fmtNum(r.itemCritico.minimo)} mínimo`),
                 el('span', { class: 'sello rojo' }, 'Bajo mínimo')]
               : el('p', { class: 'empty' }, 'Ningún ítem está bajo su mínimo.')),
           tablaConteo('Stock por categoría', 'Categoría', r.stockPorCategoria),
@@ -623,7 +660,7 @@
             r.itemsBajoMinimo.length ? el('table', {},
               thead(['Código', 'Nombre', ['Cantidad', 'num'], ['Mínimo', 'num']]),
               el('tbody', {}, r.itemsBajoMinimo.map((it) => el('tr', {},
-                el('td', {}, it.id), el('td', {}, it.nombre), el('td', { class: 'num' }, String(it.cantidad)), el('td', { class: 'num' }, String(it.minimo))))))
+                el('td', {}, it.id), el('td', {}, it.nombre), el('td', { class: 'num' }, fmtNum(it.cantidad)), el('td', { class: 'num' }, fmtNum(it.minimo))))))
               : el('p', { class: 'empty' }, 'Ningún ítem está bajo el mínimo.')));
         box.replaceChildren(mosaico);
         entrada(mosaico.children);
@@ -670,7 +707,7 @@
         const users = await api('/users');
         tableBox.replaceChildren(el('table', {},
           thead(['Nombre', 'Correo', 'Rol', 'Estado', 'Creado', '']),
-          el('tbody', {}, users.map((u) => el('tr', {},
+          el('tbody', {}, users.map((u) => el('tr', { 'data-id': u.id },
             el('td', {}, u.nombre), el('td', {}, u.email),
             el('td', {}, el('select', { 'aria-label': `Rol de ${u.nombre}`, disabled: u.id === me.id, onchange: (e) => patch(u.id, { rol: e.target.value }) },
               ['Administrador', 'Operativo'].map((r) => el('option', { value: r, selected: r === u.rol }, r)))),
@@ -680,9 +717,10 @@
       } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
     }
     async function patch(id, body) {
-      try { await api('/users/' + id, { method: 'PATCH', body }); impacto(tableBox); mostrarPopup('Cambios guardados con éxito.', 'success'); }
+      let ok = false;
+      try { await api('/users/' + id, { method: 'PATCH', body }); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
       catch (ex) { mostrarPopup(ex.message, 'error'); }
-      await loadTable();
+      await recargarFila(tableBox, loadTable, id, ok);
     }
   }
 
@@ -714,16 +752,25 @@
     const error = tipo === 'error';
     const toast = el('div', { class: `toast ${tipo}`, role: error ? 'alert' : 'status' },
       icono(error ? 'alerta' : 'ok'), el('span', {}, mensaje));
+    const cerrar = () => {
+      if (toast.dataset.cerrando) return;
+      toast.dataset.cerrando = '';
+      if (anim()) gsap.to(toast, { opacity: 0, y: 12, scale: 0.95, duration: 0.2, ease: 'power2.out', onComplete: () => toast.remove() });
+      else { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }
+    };
+    // Los errores se quedan hasta que se cierran; los avisos de éxito se van solos, salvo con el ratón encima.
+    if (error) toast.append(el('button', { class: 'toast-cerrar', type: 'button', onclick: cerrar }, 'Cerrar'));
     container.appendChild(toast);
     if (error) bordeRugoso(toast);
     if (anim()) {
-      gsap.fromTo(toast, { opacity: 0, scale: 0.5, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.35, ease: 'back.out(2.2)' });
+      gsap.fromTo(toast, { opacity: 0, scale: 0.9, y: 24 }, { opacity: 1, scale: 1, y: 0, duration: 0.3, ease: 'back.out(1.8)' });
       if (error) impacto(toast, 0.3);
     } else toast.classList.add('show');
-    setTimeout(() => {
-      if (anim()) gsap.to(toast, { opacity: 0, y: 12, scale: 0.9, duration: 0.2, ease: 'power2.in', onComplete: () => toast.remove() });
-      else { toast.classList.remove('show'); setTimeout(() => toast.remove(), 250); }
-    }, 3200);
+    if (!error) {
+      let espera = setTimeout(cerrar, 3200);
+      toast.addEventListener('mouseenter', () => clearTimeout(espera));
+      toast.addEventListener('mouseleave', () => { espera = setTimeout(cerrar, 1500); });
+    }
   }
 
   // Tablas de 4+ columnas: en móvil se apilan como fichas, y cada celda lleva el nombre
