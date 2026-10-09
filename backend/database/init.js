@@ -29,7 +29,7 @@ async function migrarColumnasNuevas(pool) {
 module.exports = { initDatabase };
 
 if (require.main === module) {
-  const { createPool } = require("./pool");
+  const { createPool } = require("../src/config/db");
   const pool = createPool();
   initDatabase(pool)
     .then(() => console.log("Base de datos lista."))

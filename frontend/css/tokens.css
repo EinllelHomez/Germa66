@@ -1,0 +1,40 @@
+/* Germa 66 — Tokens: paleta, fuentes, bordes y sombras. Solo variables. Ver DESIGN.md. */
+
+:root {
+  /* Base */
+  --papel:        #E6D3AA;  /* pergamino */
+  --papel-claro:  #F2E6CB;  /* pergamino claro: viñetas */
+  --papel-campo:  #FAF4E4;  /* fondo de campos de formulario: más claro para leer y escribir */
+  --tinta:        #111111;
+  --tinta-suave:  #4A4A4A;
+  --trama:        #CDB689;
+  --textura:      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.011' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42  0 0 0 0 .28  0 0 0 0 .09  0 0 0 .55 -.2'/%3E%3C/filter%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .08  0 0 0 .6 -.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23m%29'/%3E%3Crect width='100%25' height='100%25' filter='url%28%23g%29'/%3E%3C/svg%3E");
+
+  /* Mar nocturno: fondo de la app. Las viñetas siguen siendo de papel. */
+  --mar:          #13233B;  /* fondo general */
+  --mar-profundo: #0B1628;  /* barra superior y menú */
+  --mar-claro:    #223A5E;  /* hover y separadores sobre el mar */
+  --mar-trama:    #1C3152;  /* puntos de trama sobre el mar */
+  --texto-mar:    #E9E3D6;  /* texto secundario sobre el mar (AA sobre --mar y --mar-profundo) */
+
+  /* Acentos: los colores de los cinco hermanos Vinsmoke, uno por capítulo */
+  --rojo:         #C8102E;  /* Ichiji  · acento dominante del sistema */
+  --azul-mar:     #1D4E89;  /* Niji    */
+  --dorado:       #E8A317;  /* Sanji   */
+  --verde:        #276C2B;  /* Yonji · más oscuro para llegar a AA sobre pergamino */
+  --rosa:         #B8336A;  /* Reiju   */
+
+  --fuente-titulo:  'Anton', 'Impact', 'Arial Narrow', sans-serif;
+  --fuente-sfx:     'Reggae One', 'Anton', sans-serif;
+  --fuente-texto:   'M PLUS Rounded 1c', 'Segoe UI', sans-serif;
+
+  --borde:        3px solid var(--tinta);
+  --borde-grueso: 4px solid var(--tinta);
+  --sombra-color: #03070D;
+  --sombra:       6px 6px 0 var(--sombra-color);
+  --sombra-hover: 9px 9px 0 var(--sombra-color);
+  --radio:        2px;
+
+  --linea-celda:  color-mix(in srgb, var(--tinta) 20%, transparent);
+  --alto-top:     74px;
+}

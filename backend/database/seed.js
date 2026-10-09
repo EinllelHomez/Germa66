@@ -1,7 +1,7 @@
 // Crea el Administrador inicial. Uso: npm run seed
 const bcrypt = require("bcryptjs");
-const env = require("../config/env");
-const { createPool } = require("./pool");
+const env = require("../src/config/env");
+const { createPool } = require("../src/config/db");
 const { initDatabase } = require("./init");
 
 (async () => {

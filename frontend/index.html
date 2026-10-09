@@ -10,7 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
   <!-- Onomatopeyas en katakana: solo se descargan los caracteres que se usan -->
   <link href="https://fonts.googleapis.com/css2?family=Reggae+One&display=swap&text=%E3%83%89%E3%83%B3!%E3%82%AC%E3%82%B7%E3%83%A3%E3%83%93%E3%83%AA%E3%82%B6%E3%83%83%E3%82%B8%E3%83%BC%E3%82%B3%E3%82%AE%E3%83%AD" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/componentes.css">
+  <link rel="stylesheet" href="css/vistas.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
 <body>
 
@@ -24,7 +28,7 @@
     <!-- ARTE OFICIAL TEMPORAL (uso académico): cartel grupal de la familia Vinsmoke. Sustituir por arte original. -->
     <div class="cartel cartel-login">
       <span class="cartel-cabeza">Se busca</span>
-      <span class="cartel-foto"><img src="assets/optim/cartel-grupal.webp" width="488" height="650" alt="" decoding="async" fetchpriority="high"></span>
+      <span class="cartel-foto"><img src="assets/img/personajes/cartel-grupal.webp" width="488" height="650" alt="" decoding="async" fetchpriority="high"></span>
       <span class="cartel-vivo">Vivo o muerto</span>
       <span class="cartel-nombre">Ejército Germa 66</span>
       <span class="cartel-alias">Familia Vinsmoke</span>
@@ -63,7 +67,7 @@
   <header class="topbar">
     <button id="menu-btn" class="btn menu-btn" aria-label="Abrir menú" aria-expanded="false">Menú</button>
     <div class="topbar-title">
-      <div class="emblema" aria-hidden="true"><img class="em" src="assets/optim/bandera.webp" width="160" height="163" alt="" decoding="async"></div>
+      <div class="emblema" aria-hidden="true"><img class="em" src="assets/img/marca/bandera.webp" width="160" height="163" alt="" decoding="async"></div>
       <span>Germa</span>
     </div>
     <div class="topbar-user">
@@ -78,6 +82,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
-<script src="app.js"></script>
+<script type="module" src="js/main.js"></script>
 </body>
 </html>

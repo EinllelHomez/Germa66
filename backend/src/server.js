@@ -1,6 +1,6 @@
 const env = require("./config/env");
-const { createPool } = require("./db/pool");
-const { initDatabase } = require("./db/init");
+const { createPool } = require("./config/db");
+const { initDatabase } = require("../database/init");
 const { createApp } = require("./app");
 
 (async () => {

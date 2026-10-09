@@ -1,7 +1,7 @@
 const clienteModel = require("../models/cliente.model");
 const auditoriaModel = require("../models/auditoria.model");
 
-const ESTADOS_CUENTA = ["al_dia", "en_mora", "suspendida"];
+const { estadosCuenta: ESTADOS_CUENTA } = require("../domain/catalogos");
 
 module.exports = (pool) => {
   const Cliente = clienteModel(pool);

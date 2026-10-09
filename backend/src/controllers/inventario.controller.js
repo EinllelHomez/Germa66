@@ -1,8 +1,7 @@
 const inventarioModel = require("../models/inventario.model");
 const auditoriaModel = require("../models/auditoria.model");
 
-const CATEGORIAS = ["arma", "raid_suit", "artefacto"];
-const ESTADOS = ["disponible", "en_mantenimiento", "agotado", "baja"];
+const { categoriasInventario: CATEGORIAS, estadosInventario: ESTADOS } = require("../domain/catalogos");
 
 module.exports = (pool) => {
   const Inventario = inventarioModel(pool);

@@ -1,0 +1,104 @@
+/* Germa 66 — Adaptación: tablet, móvil, táctil, hover y movimiento reducido. Ver DESIGN.md. */
+
+/* ---------- Tablet y móvil ---------- */
+@media (max-width: 1100px) {
+  .portada { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .carteles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .carteles > li.destacado { grid-row: auto; }
+  .carteles > li.destacado .cartel-foto { flex: none; aspect-ratio: 16 / 10; min-height: 0; }
+  .bienvenida { grid-row: auto; }
+}
+@media (max-width: 860px) {
+  .login { grid-template-columns: 1fr; align-content: start; padding: 12px; gap: 12px; }
+  .login-brand { min-height: 300px; padding: 1.5rem 1.5rem 3.5rem; --vx: 78%; --vy: 40%; }
+  .login-brand .cartel-login { width: 40%; right: 4%; top: 44%; padding: .6rem .6rem .7rem; }
+  .login-brand .cartel-login .cartel-cabeza { font-size: 1.4rem; }
+  .login-brand .cartel-login .cartel-nombre { font-size: 1rem; }
+  .login-brand .cartel-login .cartel-vivo, .login-brand .cartel-login .cartel-alias { display: none; }
+  .onomato-login { top: 1.2rem; left: 1.2rem; font-size: 2.6rem; }
+  .brand-caption { font-size: .85rem; }
+  .hermanos { height: 34px; margin-top: 1rem; }
+  .hermanos i { width: 20px; }
+  .login-panel { padding: 0 0 1rem; }
+
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "nav" "main"; }
+  .menu-btn { display: inline-block; }
+  .nav { display: none; position: static; height: auto; border-right: 0; border-bottom: 2px solid var(--mar-claro); }
+  .nav.open { display: flex; }
+  .content { padding: 1.25rem 1rem 3rem; }
+  #user-name { display: none; }
+  .mosaico { grid-template-columns: 1fr; }
+  .mosaico .destacada { grid-column: auto; }
+}
+@media (max-width: 560px) {
+  :root { --sombra: 4px 4px 0 var(--sombra-color); --sombra-hover: 6px 6px 0 var(--sombra-color); }
+  .topbar { gap: .5rem; padding: .5rem .75rem; }
+  .topbar .btn { padding: .4rem .6rem; font-size: .75rem; }
+  .topbar-title span { display: none; }
+  .topbar-title .emblema { width: 2rem; height: 2rem; }
+  .topbar-user { gap: .5rem; }
+  .topbar-user .sello { font-size: .75rem; }
+  .portada { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .bienvenida { grid-column: 1 / -1; min-height: 260px; }
+  .vineta.stat { min-height: 120px; margin: 0 .2rem; padding: 3.2rem 1rem .8rem; }
+  .vineta.stat::before { transform: skewX(-3deg); }
+  .vineta.stat .pestana { left: .45rem; right: .7rem; font-size: .78rem; line-height: 1.15; padding: .3rem 1.1rem .25rem .5rem; }
+  .stat-valor { font-size: 2.8rem; }
+  .stat-nota { font-size: .76rem; }
+  .bienvenida > .bienvenida-personaje { grid-row: 1 / span 1; align-self: start; height: 120px; margin: -1.2rem 0 .4rem; }
+  .bienvenida > h1, .bienvenida > .bienvenida-texto { grid-column: 1 / -1; }
+  .cabecera { padding: 2.8rem 1.2rem 1.1rem; margin-inline: .3rem; }
+  .cabecera .onomato { display: none; }
+  .carteles { gap: 2rem 1rem; }
+  .carteles > li.destacado .cartel-cabeza { font-size: 2.2rem; }
+  .carteles > li.destacado .cartel-nombre { font-size: 1.9rem; }
+  .cartel { padding: .8rem .6rem .9rem; }
+  .cartel-cabeza { font-size: 1.55rem; }
+  .cartel-vivo { white-space: nowrap; font-size: .7rem; letter-spacing: .18em; padding-left: .18em; }
+  .cartel-nombre { font-size: 1.35rem; }
+  .cartel-desc { display: none; }
+  .cartel-pie { flex-direction: column; gap: .4rem; }
+  .cabecera.con-personaje { margin-top: 2.4rem; }
+  .cabecera-personaje { height: 120px; max-width: 110px; right: .7rem; }
+  .cabecera.con-personaje .titulo-modulo, .cabecera.con-personaje .cabecera-sub { max-width: calc(100% - 96px); }
+}
+
+@media (max-width: 860px) {
+  table.apilable, table.apilable tbody, table.apilable tr, table.apilable td { display: block; width: 100%; }
+  /* La cabecera queda para lectores de pantalla; cada celda muestra su columna */
+  table.apilable thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table.apilable tr { padding: .7rem .8rem; border-bottom: var(--borde); }
+  table.apilable td { border: 0; padding: .3rem 0; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+  table.apilable td::before {
+    content: attr(data-label); display: block; margin-bottom: .1rem;
+    font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--tinta-suave);
+  }
+  table.apilable td[data-label=""]::before { display: none; }
+  table.apilable td:empty { display: none; }
+  table.apilable td.num input { text-align: left; }
+  .row-alerta td:first-child { box-shadow: none; padding-left: 0; }
+  table.apilable tr.row-alerta { box-shadow: inset 7px 0 0 var(--rojo); padding-left: 1.2rem; }
+  table.apilable td.col-nombre { min-width: 0; }
+}
+@media (min-width: 561px) and (max-width: 860px) {
+  table.apilable tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 1.4rem; }
+}
+
+/* Táctil: todo lo que se pulsa mide al menos 44px */
+@media (pointer: coarse) {
+  .btn, .nav button, input, select, .toast-cerrar { min-height: 44px; }
+}
+
+/* Hover solo en dispositivos con ratón */
+@media (hover: hover) {
+  .btn:hover { transform: translate(-3px, -3px); box-shadow: var(--sombra-hover); }
+  .btn.small:hover { box-shadow: 5px 5px 0 var(--sombra-color); transform: translate(-2px, -2px); }
+  .nav button:hover { border-color: var(--mar-claro); background: var(--mar-claro); box-shadow: 4px 4px 0 var(--sombra-color); transform: translate(-2px, -2px); }
+  .carteles > li > .cartel:hover { transform: rotate(0deg) translateY(-4px); box-shadow: 9px 9px 0 var(--cap-color); }
+}
+
+/* Transiciones solo si el usuario no pidió reducir movimiento */
+@media (prefers-reduced-motion: no-preference) {
+  .btn, .nav button, .cartel { transition: transform .12s, box-shadow .12s, background-color .12s; }
+  .toast { transition: opacity .2s; }
+}

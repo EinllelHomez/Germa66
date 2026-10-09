@@ -3,7 +3,7 @@ const equipamientoModel = require("../models/equipamiento.model");
 const inventarioModel = require("../models/inventario.model");
 const auditoriaModel = require("../models/auditoria.model");
 
-const ESTADOS = ["activo", "en_mantenimiento", "baja"];
+const { estadosCyborg: ESTADOS } = require("../domain/catalogos");
 
 module.exports = (pool) => {
   const Cyborg = cyborgModel(pool);

@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "init-db": "node src/db/init.js",
-    "seed": "node src/db/seed.js",
+    "init-db": "node database/init.js",
+    "seed": "node database/seed.js",
     "test": "node --test --test-concurrency=1"
   },
   "dependencies": {

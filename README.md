@@ -36,26 +36,42 @@ CREATE DATABASE germa66_test CHARACTER SET utf8mb4;
 GRANT ALL ON germa66_test.* TO 'germa'@'localhost';
 ```
 
-## Estructura MVC del backend
+## Estructura MVC
 
 ```
-backend/src/
-  config/       variables de entorno
-  db/           schema.sql (todas las tablas del MVP), init.js, seed.js, pool.js
-  models/       Modelo: toda consulta SQL vive aquí
-  controllers/  Controlador: recibe la petición, llama al modelo, decide la respuesta
-  routes/       una ruta por módulo, con authenticate/authorize (montadas en app.js)
-  middleware/   authenticate (JWT) y authorize (RBAC)
-backend/test/   pruebas con node --test
-frontend/       Vista: index.html, styles.css, app.js
-cpp/            Motor de reportes en C++ (independiente, ver cpp/README.md)
+backend/
+  src/
+    models/       MODELO: solo SQL; es lo único que toca la base de datos
+    controllers/  CONTROLADOR: recibe la petición, valida, llama al modelo, decide la respuesta
+    routes/       mapa URL → controlador, con authenticate/authorize (montadas en src/app.js)
+    services/     lógica que no es SQL: motorReportes.service.js (ejecuta el motor en C++)
+    domain/       catalogos.js: categorías, estados y roles válidos (una sola lista)
+    middleware/   authenticate (JWT) y authorize (RBAC)
+    config/       env.js (variables de entorno) y db.js (pool de MySQL)
+    app.js, server.js
+  database/       schema.sql (todas las tablas del MVP), init.js, seed.js
+  test/           pruebas con node --test
+frontend/         VISTA: la SPA, sin build (módulos de JavaScript nativos)
+  index.html
+  css/            tokens · base · componentes · vistas · responsive (en ese orden)
+  js/
+    main.js       arranque, menú de capítulos y navegación
+    core/         api, dom, sesión, formato, movimiento (GSAP/Rough), capítulos y arte
+    modelos/      un archivo por recurso: solo llamadas a la API
+    componentes/  cabecera, cartel, tabla, avisos
+    vistas/       una pantalla por archivo: pinta el DOM y maneja sus eventos
+  assets/img/     personajes/ y marca/ (WebP optimizados)
+cpp/              Motor de reportes en C++ (independiente, ver cpp/README.md)
 ```
 
 Flujo de una petición: `routes` recibe la llamada → revisa permisos con
 `middleware/auth.js` → el `controller` decide qué hacer → le pide los datos
-al `model` correspondiente → el `model` es el único que toca la base de datos.
+al `model` correspondiente (y, si hace falta, usa un `service`) → responde JSON.
+En el navegador, cada vista pide sus datos a su `modelo` y pinta el resultado.
 
-Tablas (`db/schema.sql`): `roles`, `usuarios`, `auditoria_seguridad`, `inventario`,
+Fuera del repositorio: `arte-original/` (imágenes a tamaño completo; la interfaz usa las optimizadas).
+
+Tablas (`database/schema.sql`): `roles`, `usuarios`, `auditoria_seguridad`, `inventario`,
 `cyborgs`, `cyborg_equipamiento`, `reinos_clientes`, `pedidos`, `pedido_items`.
 
 ## Roles
@@ -86,9 +102,10 @@ Todas las rutas (menos el login) requieren el header `Authorization: Bearer <tok
 | GET / POST | /api/clientes | Administrador, Operativo |
 | PATCH | /api/clientes/:id | Administrador, Operativo |
 | GET | /api/reportes | Administrador, Operativo |
+| GET | /api/catalogos | autenticado |
 
 **Pendiente:** el módulo de **Pedidos** (`/api/pedidos`). Las tablas `pedidos` y
-`pedido_items` ya existen y la ruta está comentada en `app.js`.
+`pedido_items` ya existen y la ruta está comentada en `backend/src/app.js`.
 
 ## Cómo agregar un módulo
 
@@ -96,9 +113,11 @@ Sigue el patrón de los módulos existentes (por ejemplo Inventario), en este or
 1. `models/<modulo>.model.js`: todas las consultas SQL de ese módulo.
 2. `controllers/<modulo>.controller.js`: usa el modelo, valida datos, decide códigos de estado.
 3. `routes/<modulo>.routes.js` con `authenticate` y `authorize(...)`.
-4. Montar la ruta en `app.js`.
-5. Agregar la vista del módulo en `frontend/app.js`.
-6. Agregar sus pruebas en `backend/test/`.
+4. Montar la ruta en `backend/src/app.js`.
+5. Si tiene listas de valores cerradas, agregarlas en `domain/catalogos.js`.
+6. Frontend: `js/modelos/<modulo>.js` (llamadas a la API) y `js/vistas/<modulo>.js`
+   (la pantalla); registrar la vista en `VISTAS` de `js/main.js`.
+7. Agregar sus pruebas en `backend/test/`.
 
 ## Módulo C++ (motor de reportes)
 
@@ -106,8 +125,8 @@ Calcula el stock por categoría, los ítems bajo el mínimo y los pedidos por es
 a partir de los CSV de `cpp/data/`. Detalles del diseño y la compilación por línea
 de comandos (`make run` o `g++`) en [`cpp/README.md`](cpp/README.md).
 
-> Solo necesitas instalar Dev-C++ si vas a **editar** el código C++. Si no lo vas a
-> tocar no hace falta: ya está compilado en `cpp/Reportes.exe`.
+> Solo necesitas Dev-C++ si vas a **editar** el código C++: ya está compilado en
+> `cpp/Reportes.exe`, que es donde lo busca el backend. Si lo recompilas, déjalo con ese nombre.
 
 El instalador está en el repositorio (`C++ Instalador/`). Después de instalarlo:
 

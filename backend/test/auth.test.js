@@ -4,8 +4,8 @@ const assert = require('node:assert');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const env = require('../src/config/env');
-const { createPool } = require('../src/db/pool');
-const { initDatabase } = require('../src/db/init');
+const { createPool } = require('../src/config/db');
+const { initDatabase } = require('../database/init');
 const { createApp } = require('../src/app');
 
 let pool, server, base;

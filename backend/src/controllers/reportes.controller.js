@@ -1,4 +1,5 @@
 const reportesModel = require("../models/reportes.model");
+const motorReportes = require("../services/motorReportes.service");
 
 module.exports = (pool) => {
   const Reportes = reportesModel(pool);
@@ -6,8 +7,8 @@ module.exports = (pool) => {
   return {
     async get(req, res) {
       try {
-        const reporte = await Reportes.generarReporte();
-        res.json(reporte);
+        const datos = await Reportes.datosParaReporte();
+        res.json(await motorReportes.generarReporte(datos));
       } catch (e) {
         res.status(500).json({ error: e.message });
       }
