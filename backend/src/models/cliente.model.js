@@ -1,4 +1,3 @@
-// Modelo Reinos Clientes (RF-04). Toda consulta SQL sobre clientes vive aquí.
 const SELECT_CLIENTE = `SELECT id, nombre, contacto, ubicacion, estado_cuenta FROM reinos_clientes`;
 
 module.exports = (pool) => ({

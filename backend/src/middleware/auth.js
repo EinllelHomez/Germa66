@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
 
-// Valida el JWT y deja el usuario en req.user
+
 function authenticate(req, res, next) {
   const [scheme, token] = (req.headers.authorization || "").split(" ");
   if (scheme !== "Bearer" || !token) {
@@ -15,7 +15,6 @@ function authenticate(req, res, next) {
   }
 }
 
-// RBAC: authorize("Administrador") o authorize("Administrador", "Operativo")
 function authorize(...roles) {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.rol)) {
@@ -25,7 +24,7 @@ function authorize(...roles) {
   };
 }
 
-// Express 4 no captura errores de handlers async
+
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 module.exports = { authenticate, authorize, wrap };

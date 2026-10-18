@@ -1,7 +1,5 @@
-// Modelo AuditoriaSeguridad (diagrama UML del SRS: idRegistro, fechaHora,
-// accionRealizada, direccionIP, registrarLog, consultarLogsActividad).
 module.exports = (pool) => ({
-  // registrarLog(idUsuario, accion): nunca lanza error, para no tumbar la petición
+
   async registrarLog(usuarioId, accion, ip) {
     try {
       await pool.query(
@@ -13,7 +11,7 @@ module.exports = (pool) => ({
     }
   },
 
-  // consultarLogsActividad(): List<String> en el diagrama; aquí como filas con el correo del usuario
+  
   async consultarLogsActividad(limite = 50) {
     const [rows] = await pool.query(
       `SELECT a.id, a.fecha_hora, a.accion_realizada, a.direccion_ip, u.email AS usuario

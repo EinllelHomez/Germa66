@@ -1,5 +1,3 @@
-// Pruebas simples, sin librerías externas, para no depender de nada
-// que el equipo no tenga instalado. Uso: probar
 #include <cassert>
 #include <iostream>
 #include "RecursoMilitar.h"
@@ -44,10 +42,8 @@ static void test_indicadores_ampliados() {
     motor.cargarPedidosCSV("data/pedidos.csv");
     motor.cargarCyborgsCSV("data/cyborgs.csv");
 
-    // 15+2+8+1+20 = 46 unidades en total, sin importar la categoría.
     assert(motor.totalUnidadesInventario() == 46);
 
-    // ARM-002 (2/5, déficit 3) está más lejos de su mínimo que RS-002 (1/3, déficit 2).
     auto critico = motor.itemCritico();
     assert(critico != nullptr);
     assert(critico->getId() == "ARM-002");

@@ -1,4 +1,3 @@
-// Modelo de cyborg_equipamiento: qué ítems de inventario tiene asignado cada cyborg (RF-03).
 module.exports = (pool) => ({
   async listarPorCyborg(cyborgId) {
     const [rows] = await pool.query(

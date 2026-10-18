@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <iostream>
 
-// Separa una línea de CSV por comas (formato simple, sin comas dentro de los campos).
 static std::vector<std::string> splitCSV(const std::string& linea) {
     std::vector<std::string> campos;
     std::stringstream ss(linea);
@@ -15,8 +14,6 @@ static std::vector<std::string> splitCSV(const std::string& linea) {
     return campos;
 }
 
-// Formato esperado: id,nombre,categoria,cantidad,minimo,ubicacion
-// arma y raid_suit llevan además un dato extra (calibre o modelo) al final.
 void MotorReportes::cargarInventarioCSV(const std::string& ruta) {
     std::ifstream archivo(ruta);
     if (!archivo.is_open()) throw std::runtime_error("No se pudo abrir " + ruta);
@@ -46,7 +43,6 @@ void MotorReportes::cargarInventarioCSV(const std::string& ruta) {
     }
 }
 
-// Formato esperado: id,cliente,estado
 void MotorReportes::cargarPedidosCSV(const std::string& ruta) {
     std::ifstream archivo(ruta);
     if (!archivo.is_open()) throw std::runtime_error("No se pudo abrir " + ruta);
@@ -61,7 +57,6 @@ void MotorReportes::cargarPedidosCSV(const std::string& ruta) {
     }
 }
 
-// Formato esperado: id,codigo,estado
 void MotorReportes::cargarCyborgsCSV(const std::string& ruta) {
     std::ifstream archivo(ruta);
     if (!archivo.is_open()) throw std::runtime_error("No se pudo abrir " + ruta);

@@ -17,7 +17,7 @@ const { initDatabase } = require("./init");
     );
     console.log("Administrador creado: " + env.adminEmail + " / " + env.adminPassword);
 
-    // Usuario Operativo de prueba (checklist Sprint 1: al menos un usuario por cada rol).
+    // Usuario Operativo de prueba 
     const [[rolOperativo]] = await pool.query("SELECT id FROM roles WHERE nombre = \"Operativo\"");
     const operativoEmail = "operativo@germa66.com";
     const [existeOp] = await pool.query("SELECT id FROM usuarios WHERE email = ?", [operativoEmail]);

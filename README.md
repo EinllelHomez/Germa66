@@ -154,3 +154,13 @@ Si compiló sin errores ni advertencias, sáltate esta parte.
 2. Busca la opción *Language Standard* (puede estar bajo *Code Generation*).
 3. Elige *ISO C++17 (-std=c++17)*.
 4. Clic en *OK* y vuelve a compilar con F9. Ya no deberían salir advertencias.
+
+
+
+## Convenciones de nombres
+
+- **Estructura y términos técnicos en inglés:** carpetas y capas (`controllers`, `routes`,
+  `models`, `middleware`, `services`) y acciones genéricas (`list`, `create`, `update`).
+- **Dominio del negocio en español:** entidades y reglas propias de Germa 66
+  (`cliente`, `inventario`, `cyborg`, `auditoria`, `reportes`).
+- **Interfaz en español:** todos los textos y mensajes que ve el usuario.

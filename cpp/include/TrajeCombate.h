@@ -3,7 +3,7 @@
 
 #include "RecursoMilitar.h"
 
-// Raid Suit del RF-02. Hereda de RecursoMilitar (igual que en el diagrama UML).
+
 class TrajeCombate : public RecursoMilitar {
     std::string modeloTecnologico;
     std::string estadoMantenimiento;

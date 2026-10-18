@@ -1,16 +1,10 @@
-// Servicio del motor de reportes (RF-06). No es un modelo: no toca MySQL.
-// Recibe los datos que ya leyó el modelo, los exporta a CSV y le delega el
-// cálculo al motor en C++ (cpp/Reportes.exe), que devuelve el reporte en JSON.
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { execFile } = require("child_process");
 
-// cpp/ es hermana de backend/ dentro de la carpeta del proyecto (Germa66/).
 const RUTA_EXE = path.join(__dirname, "..", "..", "..", "cpp", "Reportes.exe");
 
-// El parser de CSV del C++ es simple (no entiende comillas), así que evitamos
-// que una coma dentro de un nombre rompa el formato quitándola en vez de escaparla.
 function csvSafe(valor) {
   return String(valor ?? "").replace(/,/g, " ");
 }
@@ -31,8 +25,6 @@ async function generarReporte({ inventario, cyborgs }) {
       ...inventario.map((i) => filaCSV([i.codigo, i.nombre, i.categoria, i.cantidad, i.minimo, i.ubicacion])),
     ].join("\n"));
 
-    // RF-05 (Pedidos) todavía no existe: exportamos el archivo solo con encabezado.
-    // El motor en C++ está preparado para eso (ver README de cpp/).
     fs.writeFileSync(rutaPedidos, "id,cliente,estado");
 
     fs.writeFileSync(rutaCyborgs, [

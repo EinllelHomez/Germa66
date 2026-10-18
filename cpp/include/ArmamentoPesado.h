@@ -3,7 +3,7 @@
 
 #include "RecursoMilitar.h"
 
-// Arma del RF-02. Hereda de RecursoMilitar (igual que en el diagrama UML).
+
 class ArmamentoPesado : public RecursoMilitar {
     std::string calibreTipo;
     float nivelCalibracion;

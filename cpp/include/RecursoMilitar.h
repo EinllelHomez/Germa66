@@ -3,15 +3,14 @@
 
 #include <string>
 
-// Clase base del diagrama UML (SRS, sección "Diagramas de Clases UML").
-// TrajeCombate y ArmamentoPesado heredan de aquí, igual que en el diagrama.
+
 class RecursoMilitar {
 protected:
     std::string idRecurso;
     std::string nombre;
-    std::string categoria;     // "arma" | "raid_suit" | "artefacto" (RF-02)
+    std::string categoria;     
     int cantidadDisponible;
-    int limiteMinimoStock;     // usado para las alertas de stock bajo
+    int limiteMinimoStock;     
     std::string ubicacionFlota;
 
 public:
@@ -25,10 +24,10 @@ public:
     int getCantidad() const;
     int getLimiteMinimo() const;
 
-    void actualizarStock(int cantidad);      // += cantidad (puede ser negativo)
-    bool verificarStockMinimo() const;       // true si está por debajo del mínimo
+    void actualizarStock(int cantidad);      
+    bool verificarStockMinimo() const;       
 
-    virtual std::string describir() const;   // cada subclase la ajusta
+    virtual std::string describir() const;   
 };
 
 #endif

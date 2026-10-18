@@ -1,4 +1,5 @@
-require("dotenv").config();
+require("dotenv").config(); sdsad 
+
 
 module.exports = {
   port: Number(process.env.PORT) || 4444,

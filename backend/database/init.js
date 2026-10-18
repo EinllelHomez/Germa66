@@ -15,6 +15,7 @@ async function initDatabase(pool) {
 // Agrega columnas nuevas a bases de datos que ya existían antes de que se agregaran
 // al schema.sql (CREATE TABLE IF NOT EXISTS no las crea en tablas ya existentes).
 // Se ejecuta cada vez que arranca el servidor; si la columna ya existe, no hace nada.
+
 async function migrarColumnasNuevas(pool) {
   const [[col]] = await pool.query(
     `SELECT COUNT(*) AS existe FROM information_schema.columns

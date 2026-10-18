@@ -1,5 +1,5 @@
-// Controlador: recibe la petición HTTP, pide datos al Modelo y decide qué responder.
-// No contiene SQL: eso vive en src/models.
+
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
@@ -18,7 +18,7 @@ module.exports = (pool) => {
       const correo = String(email).trim().toLowerCase();
       const user = await Usuario.buscarPorEmailConClave(correo);
 
-      // Mismo mensaje si no existe o la clave falla (no revela qué correos existen)
+     
       if (!user || !(await bcrypt.compare(String(password), user.clave_hash))) {
         await Auditoria.registrarLog(user && user.id, "Login fallido: " + correo, req.ip);
         return res.status(401).json({ error: "Correo o contraseña incorrectos." });

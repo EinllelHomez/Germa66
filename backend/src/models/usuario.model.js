@@ -1,5 +1,3 @@
-// Modelo Usuario (diagrama UML del SRS: idUsuario, nombre, email, claveHash, estadoActivo).
-// Toda consulta SQL sobre usuarios vive aquí; el controlador solo llama estas funciones.
 const SELECT_USUARIO = `
   SELECT u.id, u.nombre, u.email, u.activo, u.creado_en, r.nombre AS rol
   FROM usuarios u JOIN roles r ON r.id = u.rol_id`;

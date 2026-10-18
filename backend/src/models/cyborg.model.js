@@ -1,4 +1,3 @@
-// Modelo Cyborgs (RF-03). Toda consulta SQL sobre cyborgs vive aquí.
 const SELECT_CYBORG = `
   SELECT c.id, c.codigo, c.serie, c.nombre, c.estado, c.creado_en,
          COUNT(e.id) AS items_asignados
