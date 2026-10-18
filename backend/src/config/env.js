@@ -1,4 +1,4 @@
-require("dotenv").config(); sdsad 
+require("dotenv").config();
 
 
 module.exports = {
