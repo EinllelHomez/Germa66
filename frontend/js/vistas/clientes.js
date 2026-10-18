@@ -4,6 +4,7 @@ import { impacto } from '../core/movimiento.js';
 import { cabecera } from '../componentes/cabecera.js';
 import { thead, selectEstado, recargarFila } from '../componentes/tabla.js';
 import { mostrarPopup } from '../componentes/toast.js';
+import { confirmar } from '../componentes/confirmar.js';
 import { catalogos } from '../modelos/catalogos.js';
 import * as Clientes from '../modelos/clientes.js';
 
@@ -41,7 +42,7 @@ export async function renderClientes(c) {
     try {
       const clientes = await Clientes.listar();
       tableBox.replaceChildren(clientes.length ? el('table', {},
-        thead(['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta']),
+        thead(['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta', '']),
         el('tbody', {}, clientes.map((cl) => el('tr', { 'data-id': cl.id },
           el('td', {}, cl.nombre),
           el('td', {}, el('input', {
@@ -53,9 +54,21 @@ export async function renderClientes(c) {
             onchange: (e) => patch(cl.id, { ubicacion: e.target.value })
           })),
           el('td', {}, selectEstado(cl.estado_cuenta,
-            { 'aria-label': `Estado de cuenta de ${cl.nombre}`, onchange: (e) => patch(cl.id, { estadoCuenta: e.target.value }) }, catalogos.estadosCuenta))))))
+            { 'aria-label': `Estado de cuenta de ${cl.nombre}`, onchange: (e) => patch(cl.id, { estadoCuenta: e.target.value }) }, catalogos.estadosCuenta)),
+          el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => remove(cl) }, 'Eliminar'))))))
         : el('p', { class: 'empty' }, 'Aún no hay reinos clientes registrados.'));
     } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
+  }
+  async function remove(cl) {
+    const ok = await confirmar({ titulo: `¿Eliminar ${cl.nombre}?`, mensaje: 'El reino cliente se eliminará. Esta acción no se puede deshacer.' });
+    if (!ok) return;
+    try {
+      await Clientes.eliminar(cl.id);
+      mostrarPopup(`Reino ${cl.nombre} eliminado con éxito.`, 'success');
+    } catch (ex) {
+      mostrarPopup(ex.message, 'error');
+    }
+    await loadTable();
   }
   async function patch(id, body) {
     let ok = false;

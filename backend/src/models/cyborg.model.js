@@ -1,3 +1,4 @@
+// Modelo Cyborgs (RF-03). Toda consulta SQL sobre cyborgs vive aquí.
 const SELECT_CYBORG = `
   SELECT c.id, c.codigo, c.serie, c.nombre, c.estado, c.creado_en,
          COUNT(e.id) AS items_asignados
@@ -35,5 +36,10 @@ module.exports = (pool) => ({
   async actualizar(id, { nombre, estado }) {
     await pool.query("UPDATE cyborgs SET nombre = ?, estado = ? WHERE id = ?", [nombre, estado, id]);
     return this.buscarPorId(id);
+  },
+
+  // Su equipamiento se borra solo (ON DELETE CASCADE en cyborg_equipamiento).
+  async eliminar(id) {
+    await pool.query("DELETE FROM cyborgs WHERE id = ?", [id]);
   },
 });

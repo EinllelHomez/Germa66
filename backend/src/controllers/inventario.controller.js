@@ -1,11 +1,14 @@
 const inventarioModel = require("../models/inventario.model");
 const auditoriaModel = require("../models/auditoria.model");
+const equipamientoModel = require("../models/equipamiento.model");
+const { enTransaccion } = require("../config/db");
 
 const { categoriasInventario: CATEGORIAS, estadosInventario: ESTADOS } = require("../domain/catalogos");
 
 module.exports = (pool) => {
   const Inventario = inventarioModel(pool);
   const Auditoria = auditoriaModel(pool);
+  const Equipamiento = equipamientoModel(pool);
 
   return {
     async list(req, res) {
@@ -83,12 +86,34 @@ module.exports = (pool) => {
       res.json(actualizado);
     },
 
+    // Cyborgs que tienen asignado este ítem. El frontend lo consulta antes de eliminar para avisar.
+    async asignaciones(req, res) {
+      const id = Number(req.params.id);
+      if (!(await Inventario.buscarPorId(id))) return res.status(404).json({ error: "Ítem no encontrado." });
+      res.json(await Equipamiento.listarPorItem(id));
+    },
+
+    // Si el ítem está asignado a cyborgs, solo se elimina con ?forzar=1 (el usuario ya confirmó el aviso):
+    // primero se le quita a esos cyborgs y luego se borra, todo en una transacción.
     async remove(req, res) {
       const id = Number(req.params.id);
       const actual = await Inventario.buscarPorId(id);
       if (!actual) return res.status(404).json({ error: "Ítem no encontrado." });
-      await Inventario.eliminar(id);
-      await Auditoria.registrarLog(req.user.id, "Eliminó del inventario " + actual.codigo, req.ip);
+      if (await Inventario.estaEnPedidos(id)) {
+        return res.status(409).json({ error: `No se puede eliminar ${actual.codigo}: aparece en pedidos registrados.` });
+      }
+      const asignado = await Equipamiento.listarPorItem(id);
+      const forzar = req.query.forzar === "1";
+      if (asignado.length && !forzar) {
+        const lista = asignado.map((a) => a.cyborg_codigo).join(", ");
+        return res.status(409).json({ error: `${actual.codigo} está asignado a: ${lista}. Confirma para eliminarlo igualmente.` });
+      }
+      await enTransaccion(pool, async (conn) => {
+        await equipamientoModel(conn).eliminarPorItem(id);
+        await inventarioModel(conn).eliminar(id);
+      });
+      const detalle = asignado.length ? " (se quitó a " + asignado.map((a) => a.cyborg_codigo).join(", ") + ")" : "";
+      await Auditoria.registrarLog(req.user.id, "Eliminó del inventario " + actual.codigo + detalle, req.ip);
       res.status(204).send();
     },
   };

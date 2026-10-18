@@ -1,3 +1,4 @@
+// Modelo Reinos Clientes (RF-04). Toda consulta SQL sobre clientes vive aquí.
 const SELECT_CLIENTE = `SELECT id, nombre, contacto, ubicacion, estado_cuenta FROM reinos_clientes`;
 
 module.exports = (pool) => ({
@@ -30,5 +31,14 @@ module.exports = (pool) => ({
       [contacto || null, ubicacion || null, estadoCuenta, id]
     );
     return this.buscarPorId(id);
+  },
+
+  async tienePedidos(id) {
+    const [rows] = await pool.query("SELECT id FROM pedidos WHERE cliente_id = ? LIMIT 1", [id]);
+    return rows.length > 0;
+  },
+
+  async eliminar(id) {
+    await pool.query("DELETE FROM reinos_clientes WHERE id = ?", [id]);
   },
 });

@@ -4,6 +4,7 @@ import { impacto } from '../core/movimiento.js';
 import { cabecera } from '../componentes/cabecera.js';
 import { thead, opciones, selectEstado, inputNum, digitosMax, recargarFila } from '../componentes/tabla.js';
 import { mostrarPopup } from '../componentes/toast.js';
+import { confirmar } from '../componentes/confirmar.js';
 import { catalogos } from '../modelos/catalogos.js';
 import * as Inventario from '../modelos/inventario.js';
 
@@ -74,10 +75,23 @@ export async function renderInventario(c) {
     catch (ex) { mostrarPopup(ex.message, 'error'); }
     await recargarFila(tableBox, loadTable, id, ok);
   }
+  // Antes de eliminar se consulta si el ítem está asignado a cyborgs; si lo está, el aviso los lista.
   async function remove(id, codigo) {
-    if (!confirm(`¿Eliminar el ítem ${codigo} del inventario?`)) return;
+    let asignado;
+    try { asignado = await Inventario.asignaciones(id); }
+    catch (ex) { return mostrarPopup(ex.message, 'error'); }
+
+    const ok = asignado.length
+      ? await confirmar({
+        titulo: `${codigo} está asignado`,
+        mensaje: `Este ítem lo tienen ${asignado.length} cyborg(s). Si continúas, se les quitará y el ítem se eliminará del inventario.`,
+        detalle: asignado.map((a) => `${a.cyborg_codigo}${a.cyborg_nombre ? ' — ' + a.cyborg_nombre : ''} (${a.cantidad} u.)`),
+        boton: 'Eliminar igualmente',
+      })
+      : await confirmar({ titulo: `¿Eliminar ${codigo}?`, mensaje: 'El ítem se eliminará del inventario. Esta acción no se puede deshacer.' });
+    if (!ok) return;
     try {
-      await Inventario.eliminar(id);
+      await Inventario.eliminar(id, asignado.length > 0);
       mostrarPopup(`Ítem ${codigo} eliminado con éxito.`, 'success');
     } catch (ex) {
       mostrarPopup(ex.message, 'error');

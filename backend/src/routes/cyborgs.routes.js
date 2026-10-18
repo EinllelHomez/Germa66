@@ -8,6 +8,7 @@ module.exports = (pool) => {
   r.get("/", wrap(c.list));
   r.post("/", wrap(c.create));
   r.patch("/:id", wrap(c.update));
+  r.delete("/:id", wrap(c.remove));
   r.get("/:id/equipamiento", wrap(c.listEquipamiento));
   r.post("/:id/equipamiento", wrap(c.assignEquipamiento));
   r.delete("/:id/equipamiento/:equipId", wrap(c.unassignEquipamiento));

@@ -196,3 +196,26 @@ td.num input { text-align: right; }
   font: 800 .72rem var(--fuente-texto); text-transform: uppercase; letter-spacing: .05em;
 }
 .toast-cerrar:focus-visible { outline: 3px solid var(--tinta); outline-offset: 2px; }
+
+/* ---------- Ventana de confirmación (componentes/confirmar.js) ---------- */
+dialog.confirmar {
+  width: min(500px, calc(100vw - 32px)); padding: 1.5rem; margin: auto;
+  border: var(--borde-grueso); border-radius: var(--radio);
+  background: var(--papel-claro); color: var(--tinta); box-shadow: 8px 8px 0 var(--rojo);
+}
+dialog.confirmar::backdrop { background: color-mix(in srgb, var(--mar-profundo) 75%, transparent); }
+dialog.confirmar h2 {
+  display: flex; align-items: center; gap: .5rem; margin: 0 0 .75rem;
+  font-family: var(--fuente-titulo); font-weight: 400; font-size: 1.5rem; letter-spacing: .02em; color: var(--rojo);
+}
+dialog.confirmar h2 .icono { width: 1.6rem; height: 1.6rem; flex: none; }
+dialog.confirmar p { margin: 0 0 .75rem; line-height: 1.45; }
+.confirmar-lista {
+  margin: 0 0 1rem; padding: .6rem .9rem .6rem 1.9rem; max-height: 40vh; overflow: auto;
+  border: 2px solid var(--tinta); background: var(--papel-campo); font-weight: 700;
+}
+.confirmar-lista li + li { margin-top: .25rem; }
+.confirmar-botones { display: flex; justify-content: flex-end; gap: .75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+.btn.peligro { background: var(--rojo); color: var(--papel-claro); }
+.confirmar-botones .btn { white-space: nowrap; }
+.acciones { display: flex; gap: .5rem; flex-wrap: wrap; }

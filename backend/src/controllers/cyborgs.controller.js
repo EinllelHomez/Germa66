@@ -2,6 +2,7 @@ const cyborgModel = require("../models/cyborg.model");
 const equipamientoModel = require("../models/equipamiento.model");
 const inventarioModel = require("../models/inventario.model");
 const auditoriaModel = require("../models/auditoria.model");
+const { enTransaccion } = require("../config/db");
 
 const { estadosCyborg: ESTADOS } = require("../domain/catalogos");
 
@@ -53,6 +54,22 @@ module.exports = (pool) => {
       });
       await Auditoria.registrarLog(req.user.id, "Actualizó cyborg #" + id + " (" + actual.codigo + ")", req.ip);
       res.json(actualizado);
+    },
+
+    // Al eliminar un cyborg, su equipamiento vuelve al inventario antes de borrarlo (en una transacción).
+    async remove(req, res) {
+      const id = Number(req.params.id);
+      const actual = await Cyborg.buscarPorId(id);
+      if (!actual) return res.status(404).json({ error: "Cyborg no encontrado." });
+      const equipo = await Equipamiento.listarPorCyborg(id);
+      await enTransaccion(pool, async (conn) => {
+        const Inv = inventarioModel(conn);
+        for (const e of equipo) await Inv.aumentar(e.item_id, e.cantidad);
+        await cyborgModel(conn).eliminar(id);
+      });
+      const detalle = equipo.length ? ` (${equipo.length} ítem(s) devueltos al inventario)` : "";
+      await Auditoria.registrarLog(req.user.id, "Eliminó cyborg " + actual.codigo + detalle, req.ip);
+      res.status(204).send();
     },
 
     async listEquipamiento(req, res) {

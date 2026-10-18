@@ -5,6 +5,7 @@ import { entrada, impacto } from '../core/movimiento.js';
 import { cabecera } from '../componentes/cabecera.js';
 import { thead, selectEstado, recargarFila } from '../componentes/tabla.js';
 import { mostrarPopup } from '../componentes/toast.js';
+import { confirmar } from '../componentes/confirmar.js';
 import { catalogos } from '../modelos/catalogos.js';
 import * as Cyborgs from '../modelos/cyborgs.js';
 import * as Inventario from '../modelos/inventario.js';
@@ -50,9 +51,29 @@ export async function renderCyborgs(c) {
           el('td', {}, selectEstado(cy.estado,
             { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patchEstado(cy.id, e.target.value) }, catalogos.estadosCyborg)),
           el('td', { class: 'num' }, fmtNum(cy.items_asignados)),
-          el('td', {}, el('button', { class: 'btn small', type: 'button', onclick: () => renderEquipo(cy) }, 'Equipamiento'))))))
+          el('td', {}, el('div', { class: 'acciones' },
+            el('button', { class: 'btn small', type: 'button', onclick: () => renderEquipo(cy) }, 'Equipamiento'),
+            el('button', { class: 'btn small', type: 'button', onclick: () => remove(cy) }, 'Eliminar')))))))
         : el('p', { class: 'empty' }, 'Aún no hay cyborgs registrados.'));
     } catch (ex) { tableBox.replaceChildren(el('p', { class: 'msg err' }, ex.message)); }
+  }
+  async function remove(cy) {
+    const n = Number(cy.items_asignados) || 0;
+    const ok = await confirmar({
+      titulo: `¿Eliminar ${cy.codigo}?`,
+      mensaje: n
+        ? `Este cyborg tiene ${n} ítem(s) de equipamiento asignado(s). Al eliminarlo, ese equipamiento vuelve al inventario.`
+        : 'El cyborg se eliminará. Esta acción no se puede deshacer.',
+    });
+    if (!ok) return;
+    try {
+      await Cyborgs.eliminar(cy.id);
+      equipoBox.replaceChildren(); // por si estaba abierto el panel de equipamiento de este cyborg
+      mostrarPopup(`Cyborg ${cy.codigo} eliminado${n ? '; su equipamiento volvió al inventario' : ''}.`, 'success');
+    } catch (ex) {
+      mostrarPopup(ex.message, 'error');
+    }
+    await loadTable();
   }
   async function patchEstado(id, estado) {
     let ok = false;

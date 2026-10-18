@@ -47,5 +47,17 @@ module.exports = (pool) => {
       await Auditoria.registrarLog(req.user.id, "Actualizó cliente #" + id + " (" + actual.nombre + ")", req.ip);
       res.json(actualizado);
     },
+
+    async remove(req, res) {
+      const id = Number(req.params.id);
+      const actual = await Cliente.buscarPorId(id);
+      if (!actual) return res.status(404).json({ error: "Cliente no encontrado." });
+      if (await Cliente.tienePedidos(id)) {
+        return res.status(409).json({ error: `No se puede eliminar ${actual.nombre}: tiene pedidos registrados.` });
+      }
+      await Cliente.eliminar(id);
+      await Auditoria.registrarLog(req.user.id, "Eliminó cliente " + actual.nombre, req.ip);
+      res.status(204).send();
+    },
   };
 };
