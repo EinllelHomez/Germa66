@@ -11,7 +11,7 @@ import * as Cyborgs from '../modelos/cyborgs.js';
 import * as Inventario from '../modelos/inventario.js';
 
 export async function renderCyborgs(c) {
-  c.replaceChildren(cabecera('cyborgs', 'El ejército de clones del reino y el equipamiento asignado a cada soldado (RF-03).'));
+  c.replaceChildren(cabecera('cyborgs', 'El ejército de clones del reino y el equipamiento asignado a cada soldado.'));
   const msg = el('p', { class: 'msg', role: 'status' });
 
   const form = el('form', { class: 'panel', novalidate: true },

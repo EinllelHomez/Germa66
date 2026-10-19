@@ -7,7 +7,7 @@ import { thead } from '../componentes/tabla.js';
 import * as Reportes from '../modelos/reportes.js';
 
 export async function renderReportes(c) {
-  c.replaceChildren(cabecera('reportes', 'Inteligencia del negocio, calculada por el motor en C++ con tus datos reales (RF-06).'));
+  c.replaceChildren(cabecera('reportes', 'Inteligencia del negocio, calculada por el motor en C++ con tus datos reales.'));
   const box = el('div');
   c.append(box);
   await cargar();

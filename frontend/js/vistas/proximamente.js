@@ -6,6 +6,5 @@ export function renderProximamente(c, m) {
   c.replaceChildren(
     cabecera(m.id, m.desc),
     el('div', { class: 'panel empty' },
-      el('p', {}, `Este módulo (${m.rf}) se construye en el ${m.sprint}.`),
-      el('p', {}, 'La ruta de la API y esta pantalla se agregan siguiendo el mismo patrón que Usuarios.')));
+      el('p', {}, 'Este módulo estará disponible muy pronto.')));
 }

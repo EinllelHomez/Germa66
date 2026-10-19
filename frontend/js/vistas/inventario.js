@@ -9,7 +9,7 @@ import { catalogos } from '../modelos/catalogos.js';
 import * as Inventario from '../modelos/inventario.js';
 
 export async function renderInventario(c) {
-  c.replaceChildren(cabecera('inventario', 'El arsenal de Germa: armamento, Raid Suits y artefactos para la venta (RF-02).'));
+  c.replaceChildren(cabecera('inventario', 'El arsenal de Germa: armamento, Raid Suits y artefactos para la venta.'));
   const msg = el('p', { class: 'msg', role: 'status' });
 
   const form = el('form', { class: 'panel', novalidate: true },
@@ -49,12 +49,12 @@ export async function renderInventario(c) {
       const digitos = { cantidad: digitosMax(items.map((it) => it.cantidad)), minimo: digitosMax(items.map((it) => it.minimo)) };
       alertaBox.className = bajos ? 'msg err' : 'msg ok';
       alertaBox.replaceChildren(icono(bajos ? 'alerta' : 'ok'), bajos
-        ? `${bajos} ítem(s) por debajo del mínimo (RF-06).`
+        ? `${bajos} ítem(s) por debajo del mínimo.`
         : 'Todo el inventario está por encima de su mínimo.');
       tableBox.replaceChildren(items.length ? el('table', {},
         thead(['Código', 'Nombre', 'Categoría', ['Cantidad', 'num'], ['Mínimo', 'num'], 'Estado', 'Ubicación', '']),
         el('tbody', {}, items.map((it) => el('tr', { 'data-id': it.id, class: it.bajo_minimo ? 'row-alerta' : '' },
-          el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'sello rojo', title: 'Por debajo del mínimo (RF-06)' }, 'Bajo mínimo') : ''),
+          el('td', {}, it.codigo, it.bajo_minimo ? el('span', { class: 'sello rojo', title: 'Por debajo del mínimo' }, 'Bajo mínimo') : ''),
           el('td', { class: 'col-nombre' }, it.nombre),
           el('td', {}, el('select', { 'aria-label': `Categoría de ${it.codigo}`, onchange: (e) => patch(it.id, { categoria: e.target.value }) },
             opciones(catalogos.categoriasInventario, it.categoria))),

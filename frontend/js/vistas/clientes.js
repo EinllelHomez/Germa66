@@ -9,7 +9,7 @@ import { catalogos } from '../modelos/catalogos.js';
 import * as Clientes from '../modelos/clientes.js';
 
 export async function renderClientes(c) {
-  c.replaceChildren(cabecera('clientes', 'Reinos que compran armas y tropas a Germa, y su estado de cuenta (RF-04).'));
+  c.replaceChildren(cabecera('clientes', 'Reinos que compran armas y tropas a Germa, y su estado de cuenta.'));
   const msg = el('p', { class: 'msg', role: 'status' });
 
   const form = el('form', { class: 'panel', novalidate: true },
