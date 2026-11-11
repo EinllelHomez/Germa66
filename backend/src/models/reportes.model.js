@@ -5,7 +5,10 @@ module.exports = (pool) => ({
     const [inventario] = await pool.query(
       "SELECT codigo, nombre, categoria, cantidad, minimo, ubicacion FROM inventario"
     );
+    const [pedidos] = await pool.query(
+      "SELECT p.id, c.nombre AS cliente, p.estado FROM pedidos p JOIN reinos_clientes c ON c.id = p.cliente_id ORDER BY p.id"
+    );
     const [cyborgs] = await pool.query("SELECT id, codigo, estado FROM cyborgs");
-    return { inventario, cyborgs };
+    return { inventario, pedidos, cyborgs };
   },
 });

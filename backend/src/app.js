@@ -12,7 +12,7 @@ function createApp(pool) {
   app.use("/api/users", require("./routes/users.routes")(pool));
   app.use("/api/auditoria", require("./routes/audit.routes")(pool));
   app.use("/api/catalogos", require("./routes/catalogos.routes")());
-
+  app.use("/api/pedidos",    require("./routes/pedidos.routes")(pool));
   app.use("/api/inventario", require("./routes/inventario.routes")(pool));
 
   app.use("/api/cyborgs",    require("./routes/cyborgs.routes")(pool));

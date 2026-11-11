@@ -13,6 +13,7 @@ import { renderInicio } from './vistas/inicio.js';
 import { renderInventario } from './vistas/inventario.js';
 import { renderCyborgs } from './vistas/cyborgs.js';
 import { renderClientes } from './vistas/clientes.js';
+import { renderPedidos } from './vistas/pedidos.js'; // NUEVO
 import { renderReportes } from './vistas/reportes.js';
 import { renderUsuarios } from './vistas/usuarios.js';
 import { renderAuditoria } from './vistas/auditoria.js';
@@ -23,6 +24,7 @@ const VISTAS = {
   inventario: renderInventario,
   cyborgs: renderCyborgs,
   clientes: renderClientes,
+  pedidos: renderPedidos, // NUEVO
   reportes: renderReportes,
   usuarios: renderUsuarios,
   auditoria: renderAuditoria,
@@ -51,7 +53,8 @@ function buildNav() {
   const nav = $('#nav');
   nav.replaceChildren(navBtn(capitulo('inicio')));
   nav.append(el('div', { class: 'nav-group' }, 'Módulos'));
-  MODULES.forEach((m) => nav.append(navBtn(capitulo(m.id), m.ready ? null : 'Próximo')));
+  // NUEVO: el "Próximo" solo aparece si el módulo aún no tiene vista registrada
+  MODULES.forEach((m) => nav.append(navBtn(capitulo(m.id), VISTAS[m.id] ? null : 'Próximo')));
   if (sesion.esAdmin) {
     nav.append(el('div', { class: 'nav-group' }, 'Administración'));
     ADMIN_VIEWS.forEach((v) => nav.append(navBtn(capitulo(v.id))));
