@@ -3,5 +3,6 @@ module.exports = Object.freeze({
   estadosInventario: ["disponible", "en_mantenimiento", "agotado", "baja"],
   estadosCyborg: ["activo", "en_mantenimiento", "baja"],
   estadosCuenta: ["al_dia", "en_mora", "suspendida"],
+  estadosPedido: ["pendiente", "en_preparacion", "despachado", "cancelado"],
   roles: ["Administrador", "Operativo"],
 });

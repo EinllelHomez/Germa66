@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS cyborgs (
   codigo    VARCHAR(40) NOT NULL UNIQUE,
   serie     VARCHAR(60) NOT NULL UNIQUE,
   nombre    VARCHAR(100) NULL,
+  modelo    VARCHAR(80) NULL,
+  especificaciones TEXT NULL,
   estado    ENUM('activo','en_mantenimiento','baja') NOT NULL DEFAULT 'activo',
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -59,6 +61,7 @@ CREATE TABLE IF NOT EXISTS cyborg_equipamiento (
 CREATE TABLE IF NOT EXISTS reinos_clientes (
   id            INT AUTO_INCREMENT PRIMARY KEY,
   nombre        VARCHAR(120) NOT NULL UNIQUE,
+  representante VARCHAR(120) NULL,
   contacto      VARCHAR(120) NULL,
   ubicacion     VARCHAR(120) NULL,
   estado_cuenta ENUM('al_dia','en_mora','suspendida') NOT NULL DEFAULT 'al_dia'
@@ -68,7 +71,7 @@ CREATE TABLE IF NOT EXISTS pedidos (
   id         INT AUTO_INCREMENT PRIMARY KEY,
   cliente_id INT NOT NULL,
   usuario_id INT NOT NULL,
-  estado     ENUM('pendiente','confirmado','en_preparacion','entregado','cancelado') NOT NULL DEFAULT 'pendiente',
+  estado     ENUM('pendiente','en_preparacion','despachado','cancelado') NOT NULL DEFAULT 'pendiente',
   fecha      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_ped_cliente FOREIGN KEY (cliente_id) REFERENCES reinos_clientes(id),
   CONSTRAINT fk_ped_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id)

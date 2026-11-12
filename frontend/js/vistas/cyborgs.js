@@ -20,6 +20,8 @@ export async function renderCyborgs(c) {
       field('Código', el('input', { name: 'codigo', required: true })),
       field('Serie', el('input', { name: 'serie', required: true })),
       field('Nombre', el('input', { name: 'nombre' })),
+      field('Modelo', el('input', { name: 'modelo' })),
+      field('Especificaciones', el('input', { name: 'especificaciones' })),
       el('button', { class: 'btn primary', type: 'submit' }, 'Registrar')),
     msg);
   form.addEventListener('submit', async (e) => {
@@ -45,11 +47,19 @@ export async function renderCyborgs(c) {
     try {
       const cyborgs = await Cyborgs.listar();
       tableBox.replaceChildren(cyborgs.length ? el('table', {},
-        thead(['Código', 'Serie', 'Nombre', 'Estado', ['Ítems asignados', 'num'], '']),
+        thead(['Código', 'Serie', 'Nombre', 'Modelo', 'Especificaciones', 'Estado', ['Ítems asignados', 'num'], '']),
         el('tbody', {}, cyborgs.map((cy) => el('tr', { 'data-id': cy.id },
           el('td', {}, cy.codigo), el('td', {}, cy.serie), el('td', {}, cy.nombre || ''),
+          el('td', {}, el('input', {
+            value: cy.modelo || '', title: cy.modelo || '', 'aria-label': `Modelo de ${cy.codigo}`,
+            onchange: (e) => patch(cy.id, { modelo: e.target.value })
+          })),
+          el('td', {}, el('input', {
+            value: cy.especificaciones || '', title: cy.especificaciones || '', 'aria-label': `Especificaciones de ${cy.codigo}`,
+            onchange: (e) => patch(cy.id, { especificaciones: e.target.value })
+          })),
           el('td', {}, selectEstado(cy.estado,
-            { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patchEstado(cy.id, e.target.value) }, catalogos.estadosCyborg)),
+            { 'aria-label': `Estado de ${cy.codigo}`, onchange: (e) => patch(cy.id, { estado: e.target.value }) }, catalogos.estadosCyborg)),
           el('td', { class: 'num' }, fmtNum(cy.items_asignados)),
           el('td', {}, el('div', { class: 'acciones' },
             el('button', { class: 'btn small', type: 'button', onclick: () => renderEquipo(cy) }, 'Equipamiento'),
@@ -75,9 +85,9 @@ export async function renderCyborgs(c) {
     }
     await loadTable();
   }
-  async function patchEstado(id, estado) {
+  async function patch(id, cambios) {
     let ok = false;
-    try { await Cyborgs.actualizar(id, { estado }); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
+    try { await Cyborgs.actualizar(id, cambios); ok = true; mostrarPopup('Cambios guardados con éxito.', 'success'); }
     catch (ex) { mostrarPopup(ex.message, 'error'); }
     await recargarFila(tableBox, loadTable, id, ok);
   }
