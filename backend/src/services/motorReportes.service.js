@@ -13,7 +13,7 @@ function filaCSV(campos) {
   return campos.map(csvSafe).join(",");
 }
 
-async function generarReporte({ inventario, cyborgs }) {
+async function generarReporte({ inventario, pedidos, cyborgs }) {
   const dirTemporal = fs.mkdtempSync(path.join(os.tmpdir(), "germa66-reportes-"));
   const rutaInventario = path.join(dirTemporal, "inventario.csv");
   const rutaPedidos = path.join(dirTemporal, "pedidos.csv");
@@ -25,7 +25,10 @@ async function generarReporte({ inventario, cyborgs }) {
       ...inventario.map((i) => filaCSV([i.codigo, i.nombre, i.categoria, i.cantidad, i.minimo, i.ubicacion])),
     ].join("\n"));
 
-    fs.writeFileSync(rutaPedidos, "id,cliente,estado");
+    fs.writeFileSync(rutaPedidos, [
+      "id,cliente,estado",
+      ...pedidos.map((p) => filaCSV([p.id, p.cliente, p.estado])),
+    ].join("\n"));
 
     fs.writeFileSync(rutaCyborgs, [
       "id,codigo,estado",
