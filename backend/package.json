@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "init-db": "node database/init.js",
     "seed": "node database/seed.js",
+    "seed:demo": "node database/seed-demo.js",
     "test": "node --test --test-concurrency=1"
   },
   "dependencies": {

@@ -1,6 +1,6 @@
 // Modelo Cyborgs (RF-03). Toda consulta SQL sobre cyborgs vive aquí.
 const SELECT_CYBORG = `
-  SELECT c.id, c.codigo, c.serie, c.nombre, c.estado, c.creado_en,
+  SELECT c.id, c.codigo, c.serie, c.nombre, c.modelo, c.especificaciones, c.estado, c.creado_en,
          COUNT(e.id) AS items_asignados
   FROM cyborgs c LEFT JOIN cyborg_equipamiento e ON e.cyborg_id = c.id`;
 
@@ -25,16 +25,19 @@ module.exports = (pool) => ({
     return rows.length > 0;
   },
 
-  async crear({ codigo, serie, nombre, estado }) {
+  async crear({ codigo, serie, nombre, modelo, especificaciones, estado }) {
     const [info] = await pool.query(
-      "INSERT INTO cyborgs (codigo, serie, nombre, estado) VALUES (?,?,?,?)",
-      [codigo, serie, nombre || null, estado || "activo"]
+      "INSERT INTO cyborgs (codigo, serie, nombre, modelo, especificaciones, estado) VALUES (?,?,?,?,?,?)",
+      [codigo, serie, nombre || null, modelo || null, especificaciones || null, estado || "activo"]
     );
     return this.buscarPorId(info.insertId);
   },
 
-  async actualizar(id, { nombre, estado }) {
-    await pool.query("UPDATE cyborgs SET nombre = ?, estado = ? WHERE id = ?", [nombre, estado, id]);
+  async actualizar(id, { nombre, modelo, especificaciones, estado }) {
+    await pool.query(
+      "UPDATE cyborgs SET nombre = ?, modelo = ?, especificaciones = ?, estado = ? WHERE id = ?",
+      [nombre, modelo || null, especificaciones || null, estado, id]
+    );
     return this.buscarPorId(id);
   },
 

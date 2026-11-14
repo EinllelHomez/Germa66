@@ -18,7 +18,7 @@ module.exports = (pool) => {
     },
 
     async create(req, res) {
-      const { codigo, serie, nombre, estado } = req.body || {};
+      const { codigo, serie, nombre, modelo, especificaciones, estado } = req.body || {};
       if (!codigo || !serie) {
         return res.status(400).json({ error: "Código y serie son obligatorios." });
       }
@@ -33,7 +33,7 @@ module.exports = (pool) => {
       if (await Cyborg.existeSerie(serieLimpia)) {
         return res.status(409).json({ error: "Ya existe un cyborg con esa serie." });
       }
-      const creado = await Cyborg.crear({ codigo: codigoLimpio, serie: serieLimpia, nombre, estado });
+      const creado = await Cyborg.crear({ codigo: codigoLimpio, serie: serieLimpia, nombre, modelo, especificaciones, estado });
       await Auditoria.registrarLog(req.user.id, "Registró cyborg " + codigoLimpio, req.ip);
       res.status(201).json(creado);
     },
@@ -43,13 +43,15 @@ module.exports = (pool) => {
       const actual = await Cyborg.buscarPorId(id);
       if (!actual) return res.status(404).json({ error: "Cyborg no encontrado." });
 
-      const { nombre, estado } = req.body || {};
+      const { nombre, modelo, especificaciones, estado } = req.body || {};
       const nuevoEstado = estado !== undefined ? estado : actual.estado;
       if (!ESTADOS.includes(nuevoEstado)) {
         return res.status(400).json({ error: "Estado inválido." });
       }
       const actualizado = await Cyborg.actualizar(id, {
         nombre: nombre !== undefined ? nombre : actual.nombre,
+        modelo: modelo !== undefined ? modelo : actual.modelo,
+        especificaciones: especificaciones !== undefined ? especificaciones : actual.especificaciones,
         estado: nuevoEstado,
       });
       await Auditoria.registrarLog(req.user.id, "Actualizó cyborg #" + id + " (" + actual.codigo + ")", req.ip);

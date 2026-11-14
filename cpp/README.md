@@ -47,7 +47,7 @@ g++ -std=c++17 -Iinclude src/*.cpp -o reportes
 `categoria` es `arma`, `raid_suit` o `artefacto`.
 
 `data/pedidos.csv`: `id,cliente,estado`
-`estado` es `pendiente`, `confirmado`, `en_preparacion`, `entregado` o `cancelado`.
+`estado` es `pendiente`, `en_preparacion`, `despachado` o `cancelado`.
 
 ## Pruebas
 ```

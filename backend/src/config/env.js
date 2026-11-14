@@ -12,6 +12,7 @@ module.exports = {
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "germa66",
   },
+  dbSsl: process.env.DB_SSL === "true",
   adminEmail: process.env.ADMIN_EMAIL || "germa66@admin.com",
   adminPassword: process.env.ADMIN_PASSWORD || "germa66.",
 };

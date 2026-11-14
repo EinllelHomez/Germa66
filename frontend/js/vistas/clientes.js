@@ -1,4 +1,4 @@
-// Vista Reinos clientes (RF-04): alta de reinos y tabla editable de contacto y estado de cuenta.
+// Vista Reinos clientes (RF-04): alta de reinos y tabla editable de representante, contacto y estado de cuenta.
 import { el, field } from '../core/dom.js';
 import { impacto } from '../core/movimiento.js';
 import { cabecera } from '../componentes/cabecera.js';
@@ -16,6 +16,7 @@ export async function renderClientes(c) {
     el('h2', {}, 'Nuevo reino cliente'),
     el('div', { class: 'form-row' },
       field('Nombre del reino', el('input', { name: 'nombre', required: true })),
+      field('Representante', el('input', { name: 'representante' })),
       field('Contacto', el('input', { name: 'contacto' })),
       field('Ubicación', el('input', { name: 'ubicacion' })),
       el('button', { class: 'btn primary', type: 'submit' }, 'Registrar')),
@@ -42,9 +43,13 @@ export async function renderClientes(c) {
     try {
       const clientes = await Clientes.listar();
       tableBox.replaceChildren(clientes.length ? el('table', {},
-        thead(['Reino', 'Contacto', 'Ubicación', 'Estado de cuenta', '']),
+        thead(['Reino', 'Representante', 'Contacto', 'Ubicación', 'Estado de cuenta', '']),
         el('tbody', {}, clientes.map((cl) => el('tr', { 'data-id': cl.id },
           el('td', {}, cl.nombre),
+          el('td', {}, el('input', {
+            value: cl.representante || '', title: cl.representante || '', 'aria-label': `Representante de ${cl.nombre}`,
+            onchange: (e) => patch(cl.id, { representante: e.target.value })
+          })),
           el('td', {}, el('input', {
             value: cl.contacto || '', title: cl.contacto || '', 'aria-label': `Contacto de ${cl.nombre}`,
             onchange: (e) => patch(cl.id, { contacto: e.target.value })

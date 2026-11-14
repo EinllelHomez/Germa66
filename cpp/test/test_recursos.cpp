@@ -32,7 +32,7 @@ static void test_reporte_completo() {
     motor.cargarInventarioCSV("data/inventario.csv");
     motor.cargarPedidosCSV("data/pedidos.csv");
     assert(motor.itemsBajoMinimo().size() == 2);
-    assert(motor.pedidosPorEstado().at("entregado") == 2);
+    assert(motor.pedidosPorEstado().at("despachado") == 2);
     std::cout << "OK: el reporte agrupa correctamente los datos de ejemplo\n";
 }
 

@@ -1,5 +1,5 @@
 // Modelo Reinos Clientes (RF-04). Toda consulta SQL sobre clientes vive aquí.
-const SELECT_CLIENTE = `SELECT id, nombre, contacto, ubicacion, estado_cuenta FROM reinos_clientes`;
+const SELECT_CLIENTE = `SELECT id, nombre, representante, contacto, ubicacion, estado_cuenta FROM reinos_clientes`;
 
 module.exports = (pool) => ({
   async listar() {
@@ -17,18 +17,18 @@ module.exports = (pool) => ({
     return rows.length > 0;
   },
 
-  async crear({ nombre, contacto, ubicacion, estadoCuenta }) {
+  async crear({ nombre, representante, contacto, ubicacion, estadoCuenta }) {
     const [info] = await pool.query(
-      "INSERT INTO reinos_clientes (nombre, contacto, ubicacion, estado_cuenta) VALUES (?,?,?,?)",
-      [nombre, contacto || null, ubicacion || null, estadoCuenta || "al_dia"]
+      "INSERT INTO reinos_clientes (nombre, representante, contacto, ubicacion, estado_cuenta) VALUES (?,?,?,?,?)",
+      [nombre, representante || null, contacto || null, ubicacion || null, estadoCuenta || "al_dia"]
     );
     return this.buscarPorId(info.insertId);
   },
 
-  async actualizar(id, { contacto, ubicacion, estadoCuenta }) {
+  async actualizar(id, { representante, contacto, ubicacion, estadoCuenta }) {
     await pool.query(
-      "UPDATE reinos_clientes SET contacto = ?, ubicacion = ?, estado_cuenta = ? WHERE id = ?",
-      [contacto || null, ubicacion || null, estadoCuenta, id]
+      "UPDATE reinos_clientes SET representante = ?, contacto = ?, ubicacion = ?, estado_cuenta = ? WHERE id = ?",
+      [representante || null, contacto || null, ubicacion || null, estadoCuenta, id]
     );
     return this.buscarPorId(id);
   },

@@ -13,7 +13,7 @@ module.exports = (pool) => {
     },
 
     async create(req, res) {
-      const { nombre, contacto, ubicacion, estadoCuenta } = req.body || {};
+      const { nombre, representante, contacto, ubicacion, estadoCuenta } = req.body || {};
       if (!nombre) {
         return res.status(400).json({ error: "El nombre del reino es obligatorio." });
       }
@@ -24,7 +24,7 @@ module.exports = (pool) => {
       if (await Cliente.existeNombre(nombreLimpio)) {
         return res.status(409).json({ error: "Ya existe un reino cliente con ese nombre." });
       }
-      const creado = await Cliente.crear({ nombre: nombreLimpio, contacto, ubicacion, estadoCuenta });
+      const creado = await Cliente.crear({ nombre: nombreLimpio, representante, contacto, ubicacion, estadoCuenta });
       await Auditoria.registrarLog(req.user.id, "Registró cliente " + nombreLimpio, req.ip);
       res.status(201).json(creado);
     },
@@ -34,12 +34,13 @@ module.exports = (pool) => {
       const actual = await Cliente.buscarPorId(id);
       if (!actual) return res.status(404).json({ error: "Cliente no encontrado." });
 
-      const { contacto, ubicacion, estadoCuenta } = req.body || {};
+      const { representante, contacto, ubicacion, estadoCuenta } = req.body || {};
       const nuevoEstado = estadoCuenta !== undefined ? estadoCuenta : actual.estado_cuenta;
       if (!ESTADOS_CUENTA.includes(nuevoEstado)) {
         return res.status(400).json({ error: "Estado de cuenta inválido." });
       }
       const actualizado = await Cliente.actualizar(id, {
+        representante: representante !== undefined ? representante : actual.representante,
         contacto: contacto !== undefined ? contacto : actual.contacto,
         ubicacion: ubicacion !== undefined ? ubicacion : actual.ubicacion,
         estadoCuenta: nuevoEstado,

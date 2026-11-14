@@ -3,7 +3,7 @@
 // Tono del sello según el estado (pendiente dorado, en proceso azul, completado verde, cancelado gris).
 export const TONO = {
   disponible: 'verde', activo: 'verde', al_dia: 'verde', completado: 'verde',
-  en_mantenimiento: 'azul', en_proceso: 'azul',
+  en_mantenimiento: 'azul', en_proceso: 'azul', en_preparacion: 'azul', despachado: 'verde',
   pendiente: 'dorado', en_mora: 'dorado',
   agotado: 'rojo',
   baja: 'gris', suspendida: 'gris', cancelado: 'gris',
@@ -14,7 +14,7 @@ const ETIQUETA = {
   arma: 'Arma', raid_suit: 'Raid Suit', artefacto: 'Artefacto',
   disponible: 'Disponible', en_mantenimiento: 'En mantenimiento', agotado: 'Agotado', baja: 'Baja',
   activo: 'Activo', al_dia: 'Al día', en_mora: 'En mora', suspendida: 'Suspendida',
-  pendiente: 'Pendiente', confirmado: 'Confirmado', en_preparacion: 'En preparación', entregado: 'Entregado', cancelado: 'Cancelado',
+  pendiente: 'Pendiente', en_preparacion: 'En preparación', despachado: 'Despachado', cancelado: 'Cancelado',
 };
 export const etiqueta = (v) => ETIQUETA[v] || v;
 
