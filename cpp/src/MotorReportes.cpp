@@ -6,11 +6,17 @@
 #include <stdexcept>
 #include <iostream>
 
-static std::vector<std::string> splitCSV(const std::string& linea) {
+static std::vector<std::string> splitCSV(std::string linea) {
+    // Archivos guardados en Windows terminan cada línea en "\r\n". En Linux (Render)
+    // el "\r" quedaba pegado al último campo (ej. "entregado\r"); aquí se quita.
+    if (!linea.empty() && linea.back() == '\r') linea.pop_back();
     std::vector<std::string> campos;
     std::stringstream ss(linea);
     std::string campo;
     while (std::getline(ss, campo, ',')) campos.push_back(campo);
+    // getline no devuelve el último campo si está vacío (ej. "ARM-1,Rifle,arma,2,5,").
+    // Sin esto, los ítems sin ubicación se saltaban y no aparecían en el reporte.
+    if (!linea.empty() && linea.back() == ',') campos.push_back("");
     return campos;
 }
 

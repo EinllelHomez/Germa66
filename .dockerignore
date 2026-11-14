@@ -1,0 +1,21 @@
+# Archivos que Render NO debe copiar al construir la página.
+# No borra nada del repositorio: solo le dice a Docker qué ignorar.
+
+# Dependencias: Render instala las suyas
+**/node_modules
+
+# Claves locales: en Render los datos van en la sección Environment
+**/.env
+
+# Ejecutables de Windows y archivos compilados (Render compila su propia versión)
+**/*.exe
+**/*.o
+
+# Carpetas que no hacen parte de la aplicación
+.git
+C++ Instalador
+backend/backend
+backend/test
+arte-original
+.claude
+.impeccable

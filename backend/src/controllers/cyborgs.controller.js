@@ -18,7 +18,7 @@ module.exports = (pool) => {
     },
 
     async create(req, res) {
-      const { codigo, serie, nombre, modelo, especificaciones, estado } = req.body || {};
+      const { codigo, serie, nombre, estado } = req.body || {};
       if (!codigo || !serie) {
         return res.status(400).json({ error: "Código y serie son obligatorios." });
       }
@@ -33,7 +33,7 @@ module.exports = (pool) => {
       if (await Cyborg.existeSerie(serieLimpia)) {
         return res.status(409).json({ error: "Ya existe un cyborg con esa serie." });
       }
-      const creado = await Cyborg.crear({ codigo: codigoLimpio, serie: serieLimpia, nombre, modelo, especificaciones, estado });
+      const creado = await Cyborg.crear({ codigo: codigoLimpio, serie: serieLimpia, nombre, estado });
       await Auditoria.registrarLog(req.user.id, "Registró cyborg " + codigoLimpio, req.ip);
       res.status(201).json(creado);
     },
@@ -43,15 +43,13 @@ module.exports = (pool) => {
       const actual = await Cyborg.buscarPorId(id);
       if (!actual) return res.status(404).json({ error: "Cyborg no encontrado." });
 
-      const { nombre, modelo, especificaciones, estado } = req.body || {};
+      const { nombre, estado } = req.body || {};
       const nuevoEstado = estado !== undefined ? estado : actual.estado;
       if (!ESTADOS.includes(nuevoEstado)) {
         return res.status(400).json({ error: "Estado inválido." });
       }
       const actualizado = await Cyborg.actualizar(id, {
         nombre: nombre !== undefined ? nombre : actual.nombre,
-        modelo: modelo !== undefined ? modelo : actual.modelo,
-        especificaciones: especificaciones !== undefined ? especificaciones : actual.especificaciones,
         estado: nuevoEstado,
       });
       await Auditoria.registrarLog(req.user.id, "Actualizó cyborg #" + id + " (" + actual.codigo + ")", req.ip);
@@ -81,7 +79,7 @@ module.exports = (pool) => {
       res.json(await Equipamiento.listarPorCyborg(cyborgId));
     },
 
-    // RF-03: "Solo permite asignar equipamiento con stock disponible en inventario (RF-02)".
+    // RF-08: solo permite asignar equipamiento con stock disponible en inventario (RF-04).
     async assignEquipamiento(req, res) {
       const cyborgId = Number(req.params.id);
       const cyborg = await Cyborg.buscarPorId(cyborgId);
@@ -99,11 +97,17 @@ module.exports = (pool) => {
       const item = await Inventario.buscarPorId(itemIdNum);
       if (!item) return res.status(404).json({ error: "Ítem de inventario no encontrado." });
 
-      const descontado = await Inventario.descontar(itemIdNum, cantidadNum);
+      // RF-09: descontar el stock y guardar la asignación van juntos en una transacción.
+      // Si cualquiera de los dos falla, MySQL deshace ambos y el inventario queda como estaba.
+      const descontado = await enTransaccion(pool, async (conn) => {
+        const ok = await inventarioModel(conn).descontar(itemIdNum, cantidadNum);
+        if (!ok) return false;
+        await equipamientoModel(conn).asignar({ cyborgId, itemId: itemIdNum, cantidad: cantidadNum });
+        return true;
+      });
       if (!descontado) {
         return res.status(400).json({ error: `No hay stock suficiente de ${item.nombre} (disponible: ${item.cantidad}).` });
       }
-      await Equipamiento.asignar({ cyborgId, itemId: itemIdNum, cantidad: cantidadNum });
       await Auditoria.registrarLog(req.user.id, `Asignó ${cantidadNum}x ${item.nombre} al cyborg ${cyborg.codigo}`, req.ip);
       res.status(201).json(await Equipamiento.listarPorCyborg(cyborgId));
     },
@@ -116,8 +120,11 @@ module.exports = (pool) => {
       if (!equipo || equipo.cyborg_id !== cyborgId) {
         return res.status(404).json({ error: "Asignación no encontrada." });
       }
-      await Equipamiento.eliminar(equipId);
-      await Inventario.aumentar(equipo.item_id, equipo.cantidad);
+      // Quitar la asignación y devolver el stock también van juntos en una transacción.
+      await enTransaccion(pool, async (conn) => {
+        await equipamientoModel(conn).eliminar(equipId);
+        await inventarioModel(conn).aumentar(equipo.item_id, equipo.cantidad);
+      });
       await Auditoria.registrarLog(req.user.id, `Quitó equipamiento #${equipId} del cyborg #${cyborgId}`, req.ip);
       res.status(204).send();
     },
