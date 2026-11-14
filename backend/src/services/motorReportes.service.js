@@ -3,10 +3,19 @@ const path = require("path");
 const os = require("os");
 const { execFile } = require("child_process");
 
-const RUTA_EXE = path.join(__dirname, "..", "..", "..", "cpp", "Reportes.exe");
+// El motor C++ se compila distinto según el sistema operativo:
+// - Windows (computadores del equipo): cpp/Reportes.exe, compilado con Dev-C++.
+// - Linux (servidor de Render): cpp/reportes, compilado con g++ por el Dockerfile.
+// REPORTES_EXE permite indicar otra ruta si hace falta.
+const NOMBRE_EXE = process.platform === "win32" ? "Reportes.exe" : "reportes";
+const RUTA_EXE = process.env.REPORTES_EXE || path.join(__dirname, "..", "..", "..", "cpp", NOMBRE_EXE);
 
+// Quita comas (rompen el CSV) y cambia los campos vacíos por "-".
+// Un campo vacío al final de la línea hacía que el motor C++ saltara la fila
+// (por ejemplo, un ítem sin ubicación no salía en el reporte).
 function csvSafe(valor) {
-  return String(valor ?? "").replace(/,/g, " ");
+  const texto = String(valor ?? "").replace(/[,\r\n]/g, " ").trim();
+  return texto === "" ? "-" : texto;
 }
 
 function filaCSV(campos) {
@@ -42,7 +51,9 @@ function ejecutarMotor(rutaInventario, rutaPedidos, rutaCyborgs) {
   return new Promise((resolve, reject) => {
     if (!fs.existsSync(RUTA_EXE)) {
       return reject(new Error(
-        "No se encontró cpp/Reportes.exe. Compílalo en Dev-C++ y asegúrate de que quede en la carpeta cpp/ del proyecto."
+        process.platform === "win32"
+          ? "No se encontró cpp/Reportes.exe. Compílalo en Dev-C++ y asegúrate de que quede en la carpeta cpp/ del proyecto."
+          : "No se encontró el motor de reportes en " + RUTA_EXE + ". Compílalo con: g++ -std=c++17 -O2 -Icpp/include cpp/src/*.cpp -o cpp/reportes"
       ));
     }
     execFile(RUTA_EXE, [rutaInventario, rutaPedidos, rutaCyborgs], { timeout: 5000 }, (error, stdout, stderr) => {

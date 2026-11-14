@@ -127,6 +127,23 @@ de comandos (`make run` o `g++`) en [`cpp/README.md`](cpp/README.md).
 
 > Solo necesitas Dev-C++ si vas a **editar** el código C++: ya está compilado en
 > `cpp/Reportes.exe`, que es donde lo busca el backend. Si lo recompilas, déjalo con ese nombre.
+>
+> En Linux (el servidor de Render) el backend usa `cpp/reportes`, que el `Dockerfile`
+> compila solo con `g++ -std=c++17 -O2 -Icpp/include cpp/src/*.cpp -o cpp/reportes`.
+
+## Publicar en Render (link público)
+
+La página se publica en Render con el `Dockerfile` de la raíz: instala las dependencias,
+compila el motor C++ para Linux y, al arrancar, crea las tablas y el Administrador
+(`npm run seed`) antes de iniciar el servidor. Render vuelve a publicar solo cada vez
+que se suben cambios a la rama `main`.
+
+Los datos de conexión **no van en el `.env` del repositorio**: se ponen en Render,
+en *Environment*: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`,
+`JWT_SECRET`, `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
+
+En el plan gratis, la página se "duerme" tras 15 minutos sin uso y tarda cerca de
+1 minuto en volver a abrir.
 
 El instalador está en el repositorio (`C++ Instalador/`). Después de instalarlo:
 
